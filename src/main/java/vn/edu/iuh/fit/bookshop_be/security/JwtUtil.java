@@ -31,9 +31,9 @@ public class JwtUtil {
         }
     }
     // tạo Access Token
-    public String generateAccessToken(String userName , String role) {
+    public String generateAccessToken(String email , String role) {
         return Jwts.builder()
-                .setSubject(userName)
+                .setSubject(email)
                 .claim("role", role) // Thêm role vào claims
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExp))
@@ -41,9 +41,9 @@ public class JwtUtil {
                 .compact();
     }
     // tạo Refresh Token
-    public String generateRefreshToken(String userName) {
+    public String generateRefreshToken(String email) {
         return Jwts.builder()
-                .setSubject(userName)
+                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExp))
                 .signWith(SignatureAlgorithm.HS512, secret)
@@ -51,8 +51,8 @@ public class JwtUtil {
 
     }
 
-    // Trích xuất userName từ token
-    public String  extractUsername(String token) {
+    // Trích xuất email từ token
+    public String  extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secret) // sử dụng SecretKey
                 .build()
@@ -68,11 +68,11 @@ public class JwtUtil {
                 .get("roles", Set.class);
     }
     // kiểm tra token có hợp lệ không
-    public boolean validateToken(String token , String userName) {
+    public boolean validateToken(String token , String email) {
         try{
-            String tokenUserName = extractUsername(token);
+            String tokenEmail = extractEmail(token);
 //           return (tokenUserName.equals(userName) && isTokenExpired(token));
-            return (tokenUserName.equals(userName) && !isTokenExpired(token));
+            return (tokenEmail.equals(email) && !isTokenExpired(token));
         } catch (Exception e) {
             return false;
         }

@@ -10,6 +10,7 @@ import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,23 +27,23 @@ public class AuthController {
     @PostMapping("/signUp")
     @ResponseBody
     public ResponseEntity<Map<String ,Object>> signup(@RequestBody SignUpRequest request){
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPasswordHash(request.getPassword());
-        user.setEmail(request.getEmail());
+//        User user = new User();
+//        user.setUsername(request.getUsername());
+//        user.setPasswordHash(request.getPassword());
+//        user.setEmail(request.getEmail());
         Map<String, Object> response = new HashMap<>();
         try{
             // kiểm tra validation
-            if(user.getUsername() == null || user.getPasswordHash()== null){
-                response.put("message", "Tài khoản và mật khẩu không được trống");
+            if(request.getEmail() == null || request.getUsername() == null || request.getPassword()== null){
+                response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
             // Gọi UserService để đăng kí user
-            userService.signUp(user);
+            userService.signUp(request);
             response.put("message" , "Đăng kí tài khoản thành công");
             response.put("status" , "success");
             Map<String, Object> data = new HashMap<>();
-            data.put("user", user);
+            data.put("user", request);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -76,8 +77,8 @@ public class AuthController {
                 return ResponseEntity.status(401).body(response);
             }
             if (userService.checkPassword(user.getPasswordHash(), existingUser.getPasswordHash())) {
-                String accessToken = jwtUtil.generateAccessToken(existingUser.getUsername() , existingUser.getRole());
-                String refreshToken = jwtUtil.generateRefreshToken(existingUser.getUsername());
+                String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole());
+                String refreshToken = jwtUtil.generateRefreshToken(existingUser.getEmail());
                 Map<String, String> tokens = new HashMap<>();
                 tokens.put("accessToken", accessToken);
                 tokens.put("refreshToken", refreshToken);
@@ -87,7 +88,7 @@ public class AuthController {
                 userInfo.put("username", existingUser.getUsername());
                 userInfo.put("email", existingUser.getEmail());
                 userInfo.put("id", existingUser.getId());
-                userInfo.put("avatar", existingUser.getProfile().getAvatarUrl());
+                userInfo.put("avatar", existingUser.getAvatarUrl());
                 userInfo.put("role", existingUser.getRole());
 
                 response.put("message", "Đăng nhập thành công");
@@ -107,6 +108,40 @@ public class AuthController {
             }
         } catch (Exception e) {
             response.put("message" , e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/account")
+    public ResponseEntity<Map<String, Object>> getUserInfo(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        System.out.println("authHeader = " + authHeader);
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user == null) {
+                response.put("message", "Người dùng không tồn tại");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            // Trả về thông tin người dùng
+//            Map<String, Object> userInfo = new HashMap<>();
+            response.put("message", "Lấy thông tin người dùng thành công");
+            response.put("status", "success");
+            User userRender = new User();
+            userRender.setId(user.getId());
+            userRender.setUsername(user.getUsername());
+            userRender.setEmail(user.getEmail());
+            userRender.setRole(user.getRole());
+            userRender.setAvatarUrl(user.getAvatarUrl());
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", userRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

@@ -26,7 +26,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // Lấy Header từ request
         final String authorizationHeader = request.getHeader("Authorization");
-        String userName = null;
+        String email = null;
         String jwt = null;
         String role = null;
 
@@ -34,7 +34,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
-                userName = jwtUtil.extractUsername(jwt);
+                email = jwtUtil.extractEmail(jwt);
                 role = jwtUtil.extractRole(jwt);
             } catch (ExpiredJwtException e) {
                 System.out.println("JWT Token hết hạn: " + e.getMessage());
@@ -44,11 +44,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         // Nếu username và role được trích xuất thành công và chưa có authentication trong context
-        if (userName != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtUtil.validateToken(jwt, userName)) {
+        if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (jwtUtil.validateToken(jwt, email)) {
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
                 UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userName, null, Collections.singletonList(authority));
+                        new UsernamePasswordAuthenticationToken(email, null, Collections.singletonList(authority));
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 

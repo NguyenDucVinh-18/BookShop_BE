@@ -20,7 +20,7 @@ public class AvatarService {
         this.cloudinary = cloudinary;
     }
 
-    public String createAndUploadAvatar(String username) {
+    public String createAndUploadAvatar(String username, String email) {
         try {
             // 1. Tạo ảnh 200x200 px
             int size = 200;
@@ -61,7 +61,7 @@ public class AvatarService {
                     bytes,
                     ObjectUtils.asMap(
                             "folder", "avatars",
-                            "public_id", username + "_avatar",
+                            "public_id", username + email + "_avatar",
                             "resource_type", "image"
                     )
             );

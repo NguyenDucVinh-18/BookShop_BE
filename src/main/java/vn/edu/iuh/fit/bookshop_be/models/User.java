@@ -15,7 +15,7 @@ public class User {
     @JoinColumn(name = "role", nullable = false)
     private String role;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String username;
 
     @Column(name = "password_hash", nullable = false)
@@ -27,8 +27,14 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private UserProfile profile;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(length = 20)
+    private String phone;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
@@ -42,14 +48,19 @@ public class User {
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
     private List<Message> receivedMessages;
 
+
+
     public User() {}
 
-    public User(String role, String username, String passwordHash, String email, LocalDateTime createdAt) {
+    public User(String role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
         this.role = role;
         this.username = username;
         this.passwordHash = passwordHash;
         this.email = email;
         this.createdAt = createdAt;
+        this.avatarUrl = avatarUrl;
+        this.phone = phone;
+
     }
 
     public Integer getId() { return id; }
@@ -75,12 +86,29 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public UserProfile getProfile() { return profile; }
-    public void setProfile(UserProfile profile) {
-        this.profile = profile;
-        if (profile != null) profile.setUser(this);
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
+    }
 
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
