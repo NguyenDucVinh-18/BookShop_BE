@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
@@ -92,6 +93,65 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
+    }
+
+    /*** Cập nhật thông tin người dùng
+     * @param authHeader
+     * @param request
+     * @return trả về thông tin người dùng sau khi cập nhật
+     */
+    @PutMapping("/updateInfo")
+    public ResponseEntity<Map<String, Object>> updateInfo(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UpdateInfoRequest request
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để cập nhật thông tin");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            if( request.getUsername() == null || request.getUsername().isEmpty() || request.getPhone() == null || request.getPhone().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Nhập đầy đủ thông tin để cập nhật");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if( !request.getPhone().matches("^0[0-9]{9,10}$")) {
+                response.put("status", "error");
+                response.put("message", "Số điện thoại phải bắt đầu bằng số 0 và có độ dài từ 10 đến 11 chữ số");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Cập nhật thông tin người dùng
+            user.setUsername(request.getUsername());
+            user.setPhone(request.getPhone());
+            userService.save(user);
+
+            response.put("status", "success");
+            response.put("message", "Cập nhật thông tin thành công");
+            User userRender = new User();
+            userRender.setId(user.getId());
+            userRender.setUsername(user.getUsername());
+            userRender.setEmail(user.getEmail());
+            userRender.setRole(user.getRole());
+            userRender.setAvatarUrl(user.getAvatarUrl());
+            userRender.setPhone(user.getPhone());
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", userRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi cập nhật thông tin: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     /**
@@ -220,13 +280,20 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            Address address = new Address();
+            Address existingAddress = addressService.findByIdAndUser(id, user);
+            if (existingAddress == null) {
+                response.put("status", "error");
+                response.put("message", "Địa chỉ không tồn tại hoặc bạn không có quyền sửa địa chỉ này");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            Address address = addressService.findById(id);
             address.setNumber(request.getNumber());
             address.setStreet(request.getStreet());
             address.setDistrict(request.getDistrict());
             address.setCity(request.getCity());
             address.setUser(user);
-            Address savedAddress = addressService.save(address);
+            addressService.save(address);
 
             response.put("status", "success");
             response.put("message", "Thêm cập nhật thành công");
@@ -238,7 +305,7 @@ public class UserController {
             userRender.setRole(user.getRole());
             userRender.setAvatarUrl(user.getAvatarUrl());
             List<Address> addresses = user.getAddresses();
-            addresses.add(savedAddress);
+            addresses.add(address);
             userRender.setAddresses(addresses);
             data.put("user", userRender);
             response.put("data", data);

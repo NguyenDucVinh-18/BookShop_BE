@@ -36,5 +36,9 @@ public class AddressService {
         return addressRepository.findByUser(user);
     }
 
+    public Address findByIdAndUser(Integer id, User user) {
+        return addressRepository.findByIdAndUser(id, user);
+    }
+
 
 }

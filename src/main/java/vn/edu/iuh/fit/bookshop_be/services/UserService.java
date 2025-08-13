@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.repositories.UserRepository;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
@@ -87,5 +88,7 @@ public class UserService {
         User savedUser =  userRepository.save(user);
         return savedUser;
     }
+
+
 
 }
