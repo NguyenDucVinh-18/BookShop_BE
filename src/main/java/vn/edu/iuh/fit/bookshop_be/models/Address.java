@@ -56,4 +56,16 @@ public class Address {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public Address(Integer id, String number, String street, String district, String city, User user) {
+        this.id = id;
+        this.number = number;
+        this.street = street;
+        this.district = district;
+        this.city = city;
+        this.user = user;
+    }
+
+    public Address() {
+    }
 }

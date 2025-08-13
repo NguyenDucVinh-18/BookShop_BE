@@ -20,7 +20,7 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
     private SecretKey secret;
-    private  long accessTokenExp = 86400000 ; // 1 ngày access token
+    private  long accessTokenExp = 604800000 ; // 7 ngày access token
     private long refreshTokenExp = 604800000; // 7 ngày rf token ;
     @PostConstruct
     public void init() {

@@ -6,11 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Address;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
+import vn.edu.iuh.fit.bookshop_be.services.AddressService;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,26 +23,33 @@ public class UserController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final Cloudinary cloudinary;
+    private final AddressService addressService;
 
-    public UserController(UserService userService, JwtUtil jwtUtil, Cloudinary cloudinary) {
+    public UserController(UserService userService, JwtUtil jwtUtil, Cloudinary cloudinary, AddressService addressService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.cloudinary = cloudinary;
+        this.addressService = addressService;
     }
 
-    @PostMapping("/updateAvatar/{userId}")
+    /**
+     * Cập nhật ảnh đại diện cho người dùng
+     * @param authHeader
+     * @param image
+     * @return trả về thông tin người dùng sau khi cập nhật ảnh đại diện
+     */
+    @PostMapping("/updateAvatar")
     public ResponseEntity<Map<String, Object>> updateAvatar(
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable("userId") Integer id,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
             User user = userService.getUserByToken(authHeader);
 
-            if (user == null || !user.getId().equals(id)) {
+            if (user == null ) {
                 response.put("status", "error");
-                response.put("message", "Bạn không có quyền cập nhật ảnh đại diện của người dùng này");
+                response.put("message", "Bạn cần đăng nhập để cập nhật ảnh đại diện");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
@@ -49,11 +60,6 @@ public class UserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            if (user == null) {
-                response.put("status", "error");
-                response.put("message", "Không tìm thấy người dùng");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
 
             // Upload ảnh lên Cloudinary
             Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
@@ -86,6 +92,195 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
+    }
+
+    /**
+     * Thêm địa chỉ mới cho người dùng
+     * @param request
+     * @param authHeader
+     * @return danh sách địa chỉ của người dùng sau khi thêm
+     */
+    @PostMapping("/addAddress")
+    public ResponseEntity<Map<String, Object>> addAddress(@RequestBody AddressRequest request, @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để thêm địa chỉ");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Address address = new Address();
+            address.setNumber(request.getNumber());
+            address.setStreet(request.getStreet());
+            address.setDistrict(request.getDistrict());
+            address.setCity(request.getCity());
+            address.setUser(user);
+            Address savedAddress = addressService.save(address);
+
+            response.put("status", "success");
+            response.put("message", "Thêm địa chỉ thành công");
+            Map<String, Object> data = new HashMap<>();
+            User userRender = new User();
+            userRender.setId(user.getId());
+            userRender.setUsername(user.getUsername());
+            userRender.setEmail(user.getEmail());
+            userRender.setRole(user.getRole());
+            userRender.setAvatarUrl(user.getAvatarUrl());
+            List<Address> addresses = user.getAddresses();
+            addresses.add(savedAddress);
+            userRender.setAddresses(addresses);
+            data.put("user", userRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi thêm địa chỉ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Xóa địa chỉ của người dùng
+     * @param authHeader
+     * @return danh sách địa chỉ của người dùng sau khi xóa
+     */
+    @DeleteMapping("/deleteAddress/{addressId}")
+    public ResponseEntity<Map<String, Object>> deleteAddress(@PathVariable("addressId") Integer id, @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xóa địa chỉ");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Address address = addressService.findById(id);
+            if (address == null) {
+                response.put("status", "error");
+                response.put("message", "Địa chỉ không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            if (!address.getUser().getId().equals(user.getId())) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền xóa địa chỉ này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            addressService.deleteById(id);
+            response.put("status", "success");
+            response.put("message", "Xóa địa chỉ thành công");
+            User userRender = new User();
+            userRender.setId(user.getId());
+            userRender.setUsername(user.getUsername());
+            userRender.setEmail(user.getEmail());
+            userRender.setRole(user.getRole());
+            userRender.setAvatarUrl(user.getAvatarUrl());
+            List<Address> addresses = user.getAddresses();
+            addresses.removeIf(addr -> addr != null && addr.getId() == id);
+            userRender.setAddresses(addresses);
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", userRender);
+            response.put("data", data);
+
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi xóa địa chỉ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+    }
+
+    /**
+     * Cập nhật địa chỉ của người dùng
+     * @param id
+     * @param authHeader
+     * @param request
+     * @return danh sách địa chỉ của người dùng sau khi cập nhật
+     */
+    @PutMapping("/updateAddress/{addressId}")
+    public ResponseEntity<Map<String, Object>> updateAddress(
+            @PathVariable("addressId") Integer id,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody AddressRequest request)
+    {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để thêm địa chỉ");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Address address = new Address();
+            address.setNumber(request.getNumber());
+            address.setStreet(request.getStreet());
+            address.setDistrict(request.getDistrict());
+            address.setCity(request.getCity());
+            address.setUser(user);
+            Address savedAddress = addressService.save(address);
+
+            response.put("status", "success");
+            response.put("message", "Thêm cập nhật thành công");
+            Map<String, Object> data = new HashMap<>();
+            User userRender = new User();
+            userRender.setId(user.getId());
+            userRender.setUsername(user.getUsername());
+            userRender.setEmail(user.getEmail());
+            userRender.setRole(user.getRole());
+            userRender.setAvatarUrl(user.getAvatarUrl());
+            List<Address> addresses = user.getAddresses();
+            addresses.add(savedAddress);
+            userRender.setAddresses(addresses);
+            data.put("user", userRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi cập nhật địa chỉ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+/**
+     * Lấy danh sách địa chỉ của người dùng
+     * @param authHeader
+     * @return danh sách địa chỉ của người dùng
+     */
+    @GetMapping("/addresses")
+    public ResponseEntity<Map<String, Object>> getAddresses(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem địa chỉ");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            List<Address> addresses = addressService.findByUser(user);
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách địa chỉ thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("addresses", addresses);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách địa chỉ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
 }
