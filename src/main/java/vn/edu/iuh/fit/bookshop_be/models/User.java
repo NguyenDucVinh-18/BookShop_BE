@@ -48,6 +48,10 @@ public class User {
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
     private List<Message> receivedMessages;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ProductReview> productReviews;
+
+
 
 
     public User() {}
