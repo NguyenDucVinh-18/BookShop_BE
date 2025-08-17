@@ -115,7 +115,6 @@ public class AuthController {
     @GetMapping("/account")
     public ResponseEntity<Map<String, Object>> getUserInfo(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
-        System.out.println("authHeader = " + authHeader);
         try {
             User user = userService.getUserByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không

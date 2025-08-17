@@ -1,6 +1,7 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.Set;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ProductID")
+    @Column(name = "product_id")
     private Integer id;
 
 
@@ -27,21 +28,21 @@ public class Product {
     @Column(name = "Price", nullable = false)
     private BigDecimal price;
 
-    @Column(name = "StockQuantity", nullable = false)
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @Column(name = "PackageDimensions")
+    @Column(name = "package_dimensions")
     private String packageDimensions;
 
-    @Column(name = "WeightGrams")
+    @Column(name = "weight_grams")
     private Integer weightGrams;
 
     @ElementCollection
-    @Column(name = "imageUrl")
-    @CollectionTable(name = "Product_Images", joinColumns = @JoinColumn(name = "ProductID"))
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
     private List<String> imageUrls = new ArrayList<>();
 
-    @Column(name = "ProductType", nullable = false)
+    @Column(name = "product_type", nullable = false)
     private String productType;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
@@ -52,6 +53,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
@@ -59,35 +61,35 @@ public class Product {
 
 
     //Sách
-    @Column(name = "PublisherName", nullable = false)
+    @Column(name = "publisher_name", nullable = false)
     private String publisherName;
 
     @ElementCollection
-    @Column(name = "authorNames")
-    @CollectionTable(name = "Product_Authors", joinColumns = @JoinColumn(name = "ProductID"))
+    @CollectionTable(name = "product_authors", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "author_name")
     private Set<String> authorNames = new HashSet<>();
 
-    @Column(name = "PublicationYear")
+    @Column(name = "publication_year")
     private String publicationYear;
 
-    @Column(name = "PageCount")
+    @Column(name = "page_count")
     private Integer pageCount;
 
-    @Column(name = "ISBN")
+    @Column(name = "isbn")
     private String isbn;
 
-    @Column(name = "CoverType")
+    @Column(name = "cover_type")
     private String coverType;
 
         //Sách giáo khoa
-        @Column(name = "GradeLevel")
+        @Column(name = "grade_level")
         private String gradeLevel;
 
         //Truyện
-        @Column(name = "AgeRating")
+        @Column(name = "age_rating")
         private String ageRating;
 
-        @Column(name = "Genres")
+        @Column(name = "genres")
         private String genres;
 
 
@@ -96,10 +98,10 @@ public class Product {
     @Column(name = "Color")
     private String color;
 
-    @Column(name = "Material")
+    @Column(name = "material")
     private String material;
 
-    @Column(name = "ManufacturingLocation")
+    @Column(name = "manufacturing_location")
     private String manufacturingLocation;
 
 

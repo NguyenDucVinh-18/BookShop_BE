@@ -1,112 +1,94 @@
 package vn.edu.iuh.fit.bookshop_be.security;
 
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import javax.crypto.SecretKey;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Set;
 
 @Component
 public class JwtUtil {
+
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+
     private SecretKey secret;
-    private  long accessTokenExp = 604800000 ; // 7 ngày access token
-    private long refreshTokenExp = 604800000; // 7 ngày rf token ;
+    private final long accessTokenExp = 7 * 24 * 60 * 60 * 1000;  // 7 ngày
+    private final long refreshTokenExp = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+
     @PostConstruct
     public void init() {
         if (SECRET_KEY == null || SECRET_KEY.isBlank()) {
+            // Nếu không cấu hình, tự generate random key (restart app sẽ đổi key)
             secret = Keys.secretKeyFor(SignatureAlgorithm.HS512);
         } else {
-            secret = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
+            // Sử dụng chuỗi plain text -> convert sang SecretKey
+            secret = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         }
     }
-    // tạo Access Token
-    public String generateAccessToken(String email , String role) {
+
+    // ================= TOKEN CREATE =================
+
+    // Tạo Access Token
+    public String generateAccessToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", role) // Thêm role vào claims
+                .claim("role", role) // thêm role
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExp))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(secret, SignatureAlgorithm.HS512)   // ✅ dùng SecretKey
                 .compact();
     }
-    // tạo Refresh Token
+
+    // Tạo Refresh Token
     public String generateRefreshToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExp))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(secret, SignatureAlgorithm.HS512)
                 .compact();
-
     }
 
-    // Trích xuất email từ token
-    public String  extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secret) // sử dụng SecretKey
-                .build()
-//                .parseClaimsJwt(token)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    // ================= TOKEN EXTRACT =================
+
+    // Trích xuất email (subject) từ token
+    public String extractEmail(String token) {
+        return getClaims(token).getSubject();
     }
 
-    //Trích xuất danh sách role từ token
-    public Set<String> extractRoles(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody()
-                .get("roles", Set.class);
+    // Trích xuất role từ token
+    public String extractRole(String token) {
+        return getClaims(token).get("role", String.class);
     }
-    // kiểm tra token có hợp lệ không
-    public boolean validateToken(String token , String email) {
-        try{
+
+    // ================= TOKEN VALIDATE =================
+
+    public boolean validateToken(String token, String email) {
+        try {
             String tokenEmail = extractEmail(token);
-//           return (tokenUserName.equals(userName) && isTokenExpired(token));
             return (tokenEmail.equals(email) && !isTokenExpired(token));
         } catch (Exception e) {
             return false;
         }
     }
-    // kiểm tra token hết hạn
+
     private boolean isTokenExpired(String token) {
-        Date exp = Jwts.parserBuilder()
+        return getClaims(token).getExpiration().before(new Date());
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(secret)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
-        return exp.before(new Date());
+                .getBody();
     }
-    // trích xuất role từ token
-    // Trích xuất role từ token
-    public String extractRole(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(secret)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.get("role", String.class);
-        } catch (ExpiredJwtException e) {
-            // Không ném ngoại lệ, trả về null để JwtRequestFilter xử lý
-            return null;
-        } catch (SignatureException e) {
-            // Không ném ngoại lệ, trả về null để JwtRequestFilter xử lý
-            return null;
-        } catch (Exception e) {
-            // Không ném ngoại lệ, trả về null để JwtRequestFilter xử lý
-            return null;
-        }
-    }
-
 }

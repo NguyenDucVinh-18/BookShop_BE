@@ -41,6 +41,10 @@ public class CategoryService{
         }
     }
 
+    public Category findById(Integer id) {
+        return categoryRepository.findById(id).orElse(null);
+    }
+
     public List<Category> searchCategories(String keyword) {
         if (keyword == null || keyword.isEmpty()) {
             return getAllCategories();

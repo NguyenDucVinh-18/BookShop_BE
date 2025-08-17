@@ -23,39 +23,37 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // Lấy Header từ request
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         final String authorizationHeader = request.getHeader("Authorization");
-        String email = null;
-        String jwt = null;
-        String role = null;
 
-        // Kiểm tra header có tồn tại và bắt đầu bằng "Bearer" không
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            try {
-                email = jwtUtil.extractEmail(jwt);
-                role = jwtUtil.extractRole(jwt);
-            } catch (ExpiredJwtException e) {
-                System.out.println("JWT Token hết hạn: " + e.getMessage());
-            } catch (Exception e) {
-                System.out.println("JWT Token không hợp lệ: " + e.getMessage());
-            }
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            // Không có JWT -> cho qua (dành cho login, register, public API)
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        // Nếu username và role được trích xuất thành công và chưa có authentication trong context
-        if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtUtil.validateToken(jwt, email)) {
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(email, null, Collections.singletonList(authority));
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        String jwt = authorizationHeader.substring(7);
+        try {
+            String email = jwtUtil.extractEmail(jwt);
+            String role = jwtUtil.extractRole(jwt);
 
+            if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtUtil.validateToken(jwt, email)) {
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(email, null, Collections.singletonList(authority));
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
             }
+        } catch (ExpiredJwtException e) {
+            System.out.println("JWT Token hết hạn: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("JWT Token không hợp lệ: " + e.getMessage());
         }
 
-        // Tiếp tục chuỗi filter trong mọi trường hợp
         filterChain.doFilter(request, response);
     }
 }
