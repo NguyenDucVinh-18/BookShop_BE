@@ -21,6 +21,9 @@ public class Cart {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "count", nullable = false)
+    private Integer count;
+
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items;
 
@@ -64,6 +67,14 @@ public class Cart {
 
     public void setItems(List<CartItem> items) {
         this.items = items;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
     }
 }
 

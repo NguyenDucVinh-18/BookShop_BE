@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -13,16 +14,22 @@ public class CartItem {
 
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
+    @JsonIgnore
     private Cart cart;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
-    private Integer quantity;
+    @Column(name = "productName")
+    private String productName;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price; // giá tại thời điểm thêm
+    @Column(name = "price")
+    private BigDecimal price;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
 
     public CartItem() {}
 
@@ -40,4 +47,29 @@ public class CartItem {
 
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
 }

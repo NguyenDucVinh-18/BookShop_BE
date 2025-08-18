@@ -1,6 +1,7 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -15,10 +16,12 @@ public class ProductReview {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "UserID", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "CustomerName", nullable = false)
