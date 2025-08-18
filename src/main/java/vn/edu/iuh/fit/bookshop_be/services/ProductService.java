@@ -50,6 +50,13 @@ public class ProductService {
         return productRepository.findByProductType(productType);
     }
 
+    public Product updateProductStock(Product product, Integer quantity) {
+        if (product != null) {
+            product.setStockQuantity(product.getStockQuantity() - quantity);
+            return productRepository.save(product);
+        }
+        return null; // or throw an exception
+    }
 
 
 

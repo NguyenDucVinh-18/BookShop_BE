@@ -30,6 +30,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/category/**").permitAll()
                         .requestMatchers("/api/product/**").permitAll()
                         .requestMatchers("/api/cart/**").permitAll()
+                        .requestMatchers("/api/order/**").permitAll()
+
 
 
                         .anyRequest().authenticated())

@@ -22,9 +22,11 @@ public class OrderItem {
     private Product product;
 
     private Integer quantity;
-
-    @Column(precision = 13, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "product_name")
+    private String productName;
+
 
     public OrderItem() {}
 
@@ -49,5 +51,13 @@ public class OrderItem {
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
 }
 
