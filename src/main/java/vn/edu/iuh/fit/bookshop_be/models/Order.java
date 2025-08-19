@@ -45,6 +45,9 @@ public class Order {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
     public Order() {}
 
     public Order(User user, String status, BigDecimal totalAmount, LocalDateTime createdAt) {
@@ -102,6 +105,14 @@ public class Order {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
     }
 }
 

@@ -16,6 +16,7 @@ import vn.edu.iuh.fit.bookshop_be.services.PaymentMethodService;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,6 +34,12 @@ public class OrderController{
         this.addressService = addressService;
     }
 
+    /**
+     * Đặt hàng
+     * @param authHeader
+     * @param request
+     * @return trả về thông tin đơn hàng đã đặt
+     */
     @PostMapping("/placeOrder")
     public ResponseEntity<Map<String, Object>> updateAvatar(
             @RequestHeader("Authorization") String authHeader,
@@ -94,6 +101,134 @@ public class OrderController{
             response.put("message", "Lỗi khi đặt hàng: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
     }
+
+    /**
+     * Lấy danh sách đơn hàng của người dùng
+     * @param authHeader
+     * @return trả về danh sách đơn hàng của người dùng
+     */
+    @GetMapping("/getOrders")
+    public ResponseEntity<Map<String, Object>> getOrders(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            List<Order> orders = orderService.findByUser(user);
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách đơn hàng thành công");
+            response.put("data", orders);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái đơn hàng
+     * @param authHeader
+     * @param orderId
+     * @param status
+     * @return trả về thông tin đơn hàng đã cập nhật
+     */
+    @PutMapping("/updateOrderStatus/{orderId}")
+    public ResponseEntity<Map<String, Object>> updateOrderStatus(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer orderId,
+            @RequestParam String status)
+    {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để cập nhật trạng thái đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền cập nhật trạng thái đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            Order order = orderService.findById(orderId);
+            if (order == null) {
+                response.put("status", "error");
+                response.put("message", "Đơn hàng không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            order = orderService.updateOrderStatus(orderId, status);
+            response.put("status", "success");
+            response.put("message", "Cập nhật trạng thái đơn hàng thành công");
+            response.put("data", order);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi cập nhật trạng thái đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Hủy đơn hàng
+     * @param authHeader
+     * @param orderId
+     * @param reason
+     * @return trả về thông tin đơn hàng đã hủy
+     */
+    @PutMapping("/cancelOrder/{orderId}")
+    public ResponseEntity<Map<String, Object>> cancelOrder(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer orderId,
+            @RequestBody String reason) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để hủy đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            Order order = orderService.findById(orderId);
+            if (order == null) {
+                response.put("status", "error");
+                response.put("message", "Đơn hàng không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            if (!order.getUser().getId().equals(user.getId())) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền hủy đơn hàng này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            if(!order.getStatus().equalsIgnoreCase("PENDING")){
+                response.put("status", "error");
+                response.put("message", "Chỉ có thể hủy đơn hàng đang chờ xử lý");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            order = orderService.cancelOrder(order, reason);
+            response.put("status", "success");
+            response.put("message", "Hủy đơn hàng thành công");
+            response.put("data", order);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi hủy đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
 }

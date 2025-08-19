@@ -66,4 +66,27 @@ public class OrderService {
         }
         return true; // Enough stock
     }
+
+    public List<Order> findByUser(User user) {
+        return orderRepository.findByUser(user);
+    }
+
+    public Order findById(Integer orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+    }
+
+    public Order updateOrderStatus(Integer orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+        order.setStatus(status);
+        return orderRepository.save(order);
+    }
+
+    public Order cancelOrder(Order order, String reason) {
+     updateOrderStatus(order.getId(), "CANCELED");
+     order.setReasonCancel(reason);
+     order.setCancelledAt(LocalDateTime.now());
+     return orderRepository.save(order);
+    }
 }
