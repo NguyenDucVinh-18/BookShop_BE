@@ -53,4 +53,17 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
+
+    public boolean checkProductQuantity(ProductOrderRequest request){
+        Integer productId = request.getProductId();
+        Product product = productService.findById(productId);
+        if (product == null) {
+            throw new RuntimeException("Product not found with ID: " + productId);
+        }
+        Integer requestedQuantity = request.getQuantity();
+        if(product.getStockQuantity() < requestedQuantity) {
+            return false; // Not enough stock
+        }
+        return true; // Enough stock
+    }
 }

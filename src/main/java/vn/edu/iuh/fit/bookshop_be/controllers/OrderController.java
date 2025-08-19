@@ -61,6 +61,15 @@ public class OrderController{
                 response.put("message", "Địa chỉ giao hàng không hợp lệ");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
+
+            // Kiểm tra số lượng sản phẩm
+            for (var productOrderRequest : request.getProducts()) {
+                if (!orderService.checkProductQuantity(productOrderRequest)) {
+                    response.put("status", "error");
+                    response.put("message", "Số lượng sản phẩm không đủ: " + productOrderRequest.getProductId());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            }
             // Thực hiện đặt hàng
             Order order = orderService.placeOrder(user, paymentMethod, address, request.getNote(), request.getProducts());
             response.put("status", "success");
