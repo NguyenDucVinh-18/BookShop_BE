@@ -26,10 +26,22 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // Bỏ qua các endpoint public
+        if (path.startsWith("/api/chat/") ||
+                path.startsWith("/api/auth/") ||
+                path.startsWith("/api/product/") ||
+                path.startsWith("/api/category/") ||
+                path.startsWith("/api/cart/") ||
+                path.startsWith("/api/order/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            // Không có JWT -> cho qua (dành cho login, register, public API)
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,4 +68,5 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
 }
