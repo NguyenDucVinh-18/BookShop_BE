@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "promotion_id")
     private Integer id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -17,8 +18,8 @@ public class Promotion {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "discount_percent", precision = 5, scale = 2)
-    private BigDecimal discountPercent;
+    @Column(name = "discount_percent")
+    private Double discountPercent;
 
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -28,7 +29,7 @@ public class Promotion {
 
     public Promotion() {}
 
-    public Promotion(String code, String description, BigDecimal discountPercent, LocalDate startDate, LocalDate endDate) {
+    public Promotion(String code, String description, Double discountPercent, LocalDate startDate, LocalDate endDate) {
         this.code = code;
         this.description = description;
         this.discountPercent = discountPercent;
@@ -45,8 +46,8 @@ public class Promotion {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public BigDecimal getDiscountPercent() { return discountPercent; }
-    public void setDiscountPercent(BigDecimal discountPercent) { this.discountPercent = discountPercent; }
+    public Double getDiscountPercent() { return discountPercent; }
+    public void setDiscountPercent(Double discountPercent) { this.discountPercent = discountPercent; }
 
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
