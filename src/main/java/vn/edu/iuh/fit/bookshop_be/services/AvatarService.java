@@ -57,11 +57,12 @@ public class AvatarService {
             byte[] bytes = baos.toByteArray();
 
             // 5. Upload Cloudinary
+            String folderName =  "avatars/" + email ;
             Map uploadResult = cloudinary.uploader().upload(
                     bytes,
                     ObjectUtils.asMap(
-                            "folder", "avatars",
-                            "public_id", username + email + "_avatar",
+                            "folder", folderName,
+                            "public_id", email + "_avatar",
                             "resource_type", "image"
                     )
             );

@@ -18,7 +18,11 @@ public class ProductReviewService {
         this.productReviewRepository = productReviewRepository;
     }
 
-    public ProductReview createProductReview(OrderItem orderItem, Integer rating, String comment, User user, Product product, List<String> mediaUrls) {
+    public ProductReview save(ProductReview productReview) {
+        return productReviewRepository.save(productReview);
+    }
+
+    public ProductReview createProductReview(OrderItem orderItem, Integer rating, String comment, User user, Product product) {
         ProductReview productReview = new ProductReview();
         productReview.setOrderItem(orderItem);
         productReview.setRating(rating);
@@ -27,9 +31,12 @@ public class ProductReviewService {
         productReview.setProduct(product);
         productReview.setUserName(user.getUsername());
         productReview.setReviewDate(java.time.LocalDateTime.now());
-        productReview.setMediaUrls(mediaUrls);
         orderItem.setReviewed(true);
         return productReviewRepository.save(productReview);
+    }
+
+    public List<ProductReview> getReviewsByProduct(Product product) {
+        return productReviewRepository.findByProduct(product);
     }
 
 }

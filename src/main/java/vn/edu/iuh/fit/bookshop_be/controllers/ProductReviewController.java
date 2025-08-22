@@ -39,6 +39,13 @@ public class ProductReviewController {
         this.cloudinary = cloudinary;
     }
 
+    /**
+     * Viết đánh giá sản phẩm
+     * @param authHeader
+     * @param request
+     * @param mediaFiles
+     * @return đánh giá sản phẩm mới được tạo
+     */
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> deletePromotion(
             @RequestHeader("Authorization") String authHeader,
@@ -83,44 +90,50 @@ public class ProductReviewController {
             }
 
 
-            // Xử lý tải lên ảnh và video
-            List<String> mediaUrls = new ArrayList<>();
-            if (mediaFiles != null ) {
-                for (MultipartFile file : mediaFiles) {
-                    if (file != null && !file.isEmpty()) {
-                        // Kiểm tra định dạng tệp (chỉ cho phép ảnh và video)
-                        String contentType = file.getContentType();
-                        if (contentType != null && (contentType.startsWith("image/") || contentType.startsWith("video/"))) {
-                            try {
-                                Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                                        ObjectUtils.asMap(
-                                                "folder", "product_reviews",
-                                                "resource_type", contentType.startsWith("video/") ? "video" : "image"
-                                        ));
-                                String mediaUrl = (String) uploadResult.get("secure_url");
-                                mediaUrls.add(mediaUrl);
-                            } catch (IOException e) {
-                                response.put("status", "error");
-                                response.put("message", "Lỗi khi tải tệp lên Cloudinary: " + e.getMessage());
-                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-                            }
-                        } else {
-                            response.put("status", "error");
-                            response.put("message", "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh (PNG, JPG) hoặc video (MP4).");
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                        }
-                    }
-                }
-            }
+
 
             ProductReview productReview =  productReviewService.createProductReview(
                    orderItem,
                     request.getRating(),
                     request.getComment(),
                     user,
-                    product,
-                    mediaUrls
+                    product
             );
+
+            if(productReview != null) {
+                // Xử lý tải lên ảnh và video
+                List<String> mediaUrls = new ArrayList<>();
+                if (mediaFiles != null ) {
+                    for (MultipartFile file : mediaFiles) {
+                        if (file != null && !file.isEmpty()) {
+                            // Kiểm tra định dạng tệp (chỉ cho phép ảnh và video)
+                            String contentType = file.getContentType();
+                            if (contentType != null && (contentType.startsWith("image/") || contentType.startsWith("video/"))) {
+                                try {
+                                    String folderName = "product_reviews/" + product.getId() + "-" + product.getProductName();
+                                    Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                                            ObjectUtils.asMap(
+                                                    "folder", folderName,
+                                                    "resource_type", contentType.startsWith("video/") ? "video" : "image"
+                                            ));
+                                    String mediaUrl = (String) uploadResult.get("secure_url");
+                                    mediaUrls.add(mediaUrl);
+                                } catch (IOException e) {
+                                    response.put("status", "error");
+                                    response.put("message", "Lỗi khi tải tệp lên Cloudinary: " + e.getMessage());
+                                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                                }
+                            } else {
+                                response.put("status", "error");
+                                response.put("message", "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh (PNG, JPG) hoặc video (MP4).");
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }
+                        }
+                    }
+                }
+                productReview.setMediaUrls(mediaUrls);
+                productReview = productReviewService.save(productReview);
+            }
 
 
             orderItem.setReviewed(true);
@@ -137,6 +150,72 @@ public class ProductReviewController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi khi viết đánh giá sản phẩm: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Lấy đánh giá sản phẩm theo ID sản phẩm
+     * @param productId
+     * @return danh sách đánh giá của sản phẩm
+     */
+    @GetMapping("/getReviewProduct/{productId}")
+    public ResponseEntity<Map<String, Object>> getReviewProduct(@PathVariable Integer productId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Product product = productService.findById(productId);
+            if (product == null) {
+                response.put("status", "error");
+                response.put("message", "Sản phẩm không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            List<ProductReview> reviews = productReviewService.getReviewsByProduct(product);
+            response.put("status", "success");
+            response.put("message", "Lấy đánh giá sản phẩm thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("reviews", reviews);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy đánh giá sản phẩm: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Lấy đánh giá sản phẩm theo ID đơn hàng
+     * @param orderItemId
+     * @return danh sách đánh giá của sản phẩm trong đơn hàng
+     */
+    @GetMapping("/getReviewProductByOrderItem/{orderItemId}")
+    public ResponseEntity<Map<String, Object>> getReviewProductByOrderItem(@PathVariable Integer orderItemId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            OrderItem orderItem = orderItemService.findById(orderItemId);
+            if (orderItem == null) {
+                response.put("status", "error");
+                response.put("message", "Đơn hàng không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            Product product = productService.findById(orderItem.getProduct().getId());
+            if (product == null) {
+                response.put("status", "error");
+                response.put("message", "Sản phẩm không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            List<ProductReview> reviews = productReviewService.getReviewsByProduct(product);
+            response.put("status", "success");
+            response.put("message", "Lấy đánh giá sản phẩm thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("reviews", reviews);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy đánh giá sản phẩm: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

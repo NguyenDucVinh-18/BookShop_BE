@@ -61,10 +61,10 @@ public class UserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-
+            String folderName =  "avatars/" + user.getEmail() ;
             // Upload ảnh lên Cloudinary
             Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
-                    ObjectUtils.asMap("folder", "avatars"));
+                    ObjectUtils.asMap("folder", folderName));
 
             String imageUrl = (String) uploadResult.get("secure_url");
 

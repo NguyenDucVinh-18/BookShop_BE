@@ -97,14 +97,18 @@ public class ProductController {
             product.setMaterial(request.getMaterial());
             product.setManufacturingLocation(request.getManufacturingLocation());
 
+            // Lưu sản phẩm
+            Product savedProduct = productService.save(product);
+
             // Xử lý upload nhiều hình ảnh
             List<String> imageUrls = new ArrayList<>();
             if (images != null) {
                 for (MultipartFile image : images) {
                     if (image != null && !image.isEmpty()) {
                         try {
+                            String folderPath = "products/"  + savedProduct.getId() + "-" + savedProduct.getProductName();
                             Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
-                                    ObjectUtils.asMap("folder", "products"));
+                                    ObjectUtils.asMap("folder", folderPath));
 
                             String imageUrl = (String) uploadResult.get("secure_url");
                             imageUrls.add(imageUrl);
@@ -120,11 +124,8 @@ public class ProductController {
                 // Nếu không có ảnh nào được tải lên, sử dụng ảnh mặc định
                 imageUrls.add("https://res.cloudinary.com/dzljcagp9/image/upload/v1755405380/images_p1gvcs.png");
             }
-            product.setImageUrls(imageUrls);
-
-            // Lưu sản phẩm
-            Product savedProduct = productService.save(product);
-
+            savedProduct.setImageUrls(imageUrls);
+            savedProduct = productService.save(savedProduct);
 
             response.put("status", "success");
             response.put("message", "Tạo sản phẩm thành công");
