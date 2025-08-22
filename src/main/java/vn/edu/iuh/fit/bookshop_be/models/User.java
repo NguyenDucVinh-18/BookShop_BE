@@ -130,5 +130,13 @@ public class User {
     public void setCart(Cart cart) {
         this.cart = cart;
     }
+
+    public List<ProductReview> getProductReviews() {
+        return productReviews;
+    }
+
+    public void setProductReviews(List<ProductReview> productReviews) {
+        this.productReviews = productReviews;
+    }
 }
 

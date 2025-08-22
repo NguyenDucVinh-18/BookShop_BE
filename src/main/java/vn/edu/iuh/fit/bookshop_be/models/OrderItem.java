@@ -27,6 +27,10 @@ public class OrderItem {
     @Column(name = "product_name")
     private String productName;
 
+    @Column(name = "is_reviewed", nullable = false)
+    private boolean isReviewed = false;
+
+
 
     public OrderItem() {}
 
@@ -58,6 +62,14 @@ public class OrderItem {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public boolean isReviewed() {
+        return isReviewed;
+    }
+
+    public void setReviewed(boolean reviewed) {
+        isReviewed = reviewed;
     }
 }
 

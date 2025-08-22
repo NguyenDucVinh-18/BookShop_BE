@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/order/**").permitAll()
                         .requestMatchers("/api/chat/**").permitAll()
                         .requestMatchers("/api/promotion/**").permitAll()
+                        .requestMatchers("/api/product-review/**").permitAll()
 
 
 

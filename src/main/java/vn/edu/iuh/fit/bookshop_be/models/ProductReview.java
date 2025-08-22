@@ -5,13 +5,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "Product_Reviews")
+@Table(name = "product_reviews")
 public class ProductReview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ReviewID")
+    @Column(name = "review_id")
     private Integer id;
 
     @ManyToOne
@@ -20,29 +22,39 @@ public class ProductReview {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "UserID", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
 
-    @Column(name = "CustomerName", nullable = false)
-    private String customerName;
+    @OneToOne
+    @JoinColumn(name = "order_item_id", nullable = false)
+    @JsonIgnore
+    private OrderItem orderItem;
 
-    @Column(name = "Rating", nullable = false)
+    @Column(name = "user_name")
+    private String userName;
+
+    @Column(name = "rating", nullable = false)
     private Integer rating;
 
     @Column(name = "Comment")
     private String comment;
 
-    @Column(name = "ReviewDate", updatable = false)
+    @Column(name = "review_date")
     private LocalDateTime reviewDate;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "product_review_media", joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "media_url")
+    private List<String> mediaUrls = new ArrayList<>();
 
     public ProductReview() {
     }
 
-    public ProductReview(Integer id, Product product, String customerName, Integer rating, String comment, LocalDateTime reviewDate) {
+    public ProductReview(Integer id, Product product, String userName, Integer rating, String comment, LocalDateTime reviewDate) {
         this.id = id;
         this.product = product;
-        this.customerName = customerName;
+        this.userName = userName;
         this.rating = rating;
         this.comment = comment;
         this.reviewDate = reviewDate;
@@ -64,12 +76,12 @@ public class ProductReview {
         this.product = product;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public Integer getRating() {
@@ -94,5 +106,29 @@ public class ProductReview {
 
     public void setReviewDate(LocalDateTime reviewDate) {
         this.reviewDate = reviewDate;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public OrderItem getOrderItem() {
+        return orderItem;
+    }
+
+    public void setOrderItem(OrderItem orderItem) {
+        this.orderItem = orderItem;
+    }
+
+    public List<String> getMediaUrls() {
+        return mediaUrls;
+    }
+
+    public void setMediaUrls(List<String> mediaUrls) {
+        this.mediaUrls = mediaUrls;
     }
 }
