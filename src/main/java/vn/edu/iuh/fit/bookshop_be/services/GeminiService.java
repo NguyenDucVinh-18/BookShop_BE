@@ -4,10 +4,12 @@ package vn.edu.iuh.fit.bookshop_be.services;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import vn.edu.iuh.fit.bookshop_be.models.Product;
 
 import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -15,8 +17,50 @@ public class GeminiService {
 
     @Value("${gemini.api.key}")
     private String API_KEY;
+    private final ProductService productService;
 
     private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+
+    public GeminiService(ProductService productService) {
+        this.productService = productService;
+    }
+
+    public String chatboxAI(String userMessage) throws IOException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        List<Product> products = productService.getAllProducts();
+        StringBuilder productList = new StringBuilder("Danh sách sản phẩm hiện có:\n");
+        for (Product product : products) {
+            productList.append("- ").append(product.getProductName())
+                    .append(" (Giá: ").append(product.getPrice())
+                    .append(", Tồn kho: ").append(product.getStockQuantity())
+                    .append(")\n");
+        }
+
+        // Prompt đóng vai trò nhân viên bán sách
+        String systemPrompt = "Bạn là một nhân viên bán sách. Hãy trả lời khách hàng một cách lịch sự, rõ ràng và hữu ích.";
+
+
+        // Request body (gồm text + image)
+        Map<String, Object> request = new HashMap<>();
+        request.put("contents", new Object[]{
+                Map.of("parts", new Object[]{
+                        Map.of("text", systemPrompt + "\n" + productList.toString() + "\nKhách hàng hỏi: " + userMessage)
+                })
+        });
+
+        Map response = restTemplate.postForObject(GEMINI_API_URL + API_KEY, request, Map.class);
+        System.out.println(response);
+        if (response != null && response.containsKey("candidates")) {
+            Map firstCandidate = (Map) ((java.util.List) response.get("candidates")).get(0);
+            Map content = (Map) firstCandidate.get("content");
+            java.util.List parts = (java.util.List) content.get("parts");
+            Map firstPart = (Map) parts.get(0);
+            return (String) firstPart.get("text");
+        }
+        return "Xin lỗi, hiện tại tôi chưa thể trả lời.";
+    }
+
 
     public String askGemini(String userMessage, byte[] imageBytes) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
@@ -40,7 +84,6 @@ public class GeminiService {
         });
 
         Map response = restTemplate.postForObject(GEMINI_API_URL + API_KEY, request, Map.class);
-
         if (response != null && response.containsKey("candidates")) {
             Map firstCandidate = (Map) ((java.util.List) response.get("candidates")).get(0);
             Map content = (Map) firstCandidate.get("content");
@@ -50,4 +93,40 @@ public class GeminiService {
         }
         return "Xin lỗi, hiện tại tôi chưa thể trả lời.";
     }
+
+    public boolean isImageRelatedToBook(byte[] imageBytes) throws IOException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Prompt yêu cầu Gemini chỉ trả lời "YES" hoặc "NO"
+        String prompt = "Hãy kiểm tra bức ảnh này có liên quan đến sách, bìa sách, thư viện hay hoạt động đọc sách không. "
+                + "Nếu có thì trả lời duy nhất 'YES', nếu không thì trả lời duy nhất 'NO'.";
+
+        // Encode ảnh sang base64
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        // Tạo body request
+        Map<String, Object> request = new HashMap<>();
+        request.put("contents", new Object[]{
+                Map.of("parts", new Object[]{
+                        Map.of("text", prompt),
+                        Map.of("inlineData", Map.of(
+                                "mimeType", "image/png",
+                                "data", base64Image
+                        ))
+                })
+        });
+
+        Map response = restTemplate.postForObject(GEMINI_API_URL + API_KEY, request, Map.class);
+
+        if (response != null && response.containsKey("candidates")) {
+            Map firstCandidate = (Map) ((java.util.List) response.get("candidates")).get(0);
+            Map content = (Map) firstCandidate.get("content");
+            java.util.List parts = (java.util.List) content.get("parts");
+            Map firstPart = (Map) parts.get(0);
+            String answer = ((String) firstPart.get("text")).trim().toUpperCase();
+            return answer.contains("YES");
+        }
+        return false;
+    }
+
 }
