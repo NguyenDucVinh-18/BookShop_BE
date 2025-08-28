@@ -77,7 +77,7 @@ public class AuthController {
                 return ResponseEntity.status(401).body(response);
             }
             if (userService.checkPassword(user.getPasswordHash(), existingUser.getPasswordHash())) {
-                String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole());
+                String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole().toString());
                 String refreshToken = jwtUtil.generateRefreshToken(existingUser.getEmail());
                 Map<String, String> tokens = new HashMap<>();
                 tokens.put("accessToken", accessToken);

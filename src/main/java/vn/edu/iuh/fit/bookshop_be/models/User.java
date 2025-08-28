@@ -1,6 +1,5 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,8 +11,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @JoinColumn(name = "role", nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role;
 
     @Column(nullable = false, length = 50)
     private String username;
@@ -51,12 +51,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ProductReview> productReviews;
 
-
-
-
     public User() {}
 
-    public User(String role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
+    public User(Role role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
         this.role = role;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -64,19 +61,14 @@ public class User {
         this.createdAt = createdAt;
         this.avatarUrl = avatarUrl;
         this.phone = phone;
-
     }
 
+    // Getters & Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -90,29 +82,14 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public List<Address> getAddresses() {
-        return addresses;
-    }
-
-    public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
-    }
+    public List<Address> getAddresses() { return addresses; }
+    public void setAddresses(List<Address> addresses) { this.addresses = addresses; }
 
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
@@ -123,20 +100,9 @@ public class User {
     public List<Message> getReceivedMessages() { return receivedMessages; }
     public void setReceivedMessages(List<Message> receivedMessages) { this.receivedMessages = receivedMessages; }
 
-    public Cart getCart() {
-        return cart;
-    }
+    public Cart getCart() { return cart; }
+    public void setCart(Cart cart) { this.cart = cart; }
 
-    public void setCart(Cart cart) {
-        this.cart = cart;
-    }
-
-    public List<ProductReview> getProductReviews() {
-        return productReviews;
-    }
-
-    public void setProductReviews(List<ProductReview> productReviews) {
-        this.productReviews = productReviews;
-    }
+    public List<ProductReview> getProductReviews() { return productReviews; }
+    public void setProductReviews(List<ProductReview> productReviews) { this.productReviews = productReviews; }
 }
-

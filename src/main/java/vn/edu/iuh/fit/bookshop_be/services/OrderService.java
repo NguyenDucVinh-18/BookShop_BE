@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -18,6 +20,10 @@ public class OrderService {
     public OrderService(OrderRepository orderRepository, ProductService productService) {
         this.orderRepository = orderRepository;
         this.productService = productService;
+    }
+
+    public Order save(Order order) {
+        return orderRepository.save(order);
     }
 
     public Order placeOrder(User user, PaymentMethod paymentMethod, Address address, String note, List<ProductOrderRequest> productOrderRequests) {
@@ -50,6 +56,14 @@ public class OrderService {
         }
         order.setTotalAmount(totalAmount);
         order.setOrderItems(orderItems);
+        if (paymentMethod == PaymentMethod.COD){
+            order.setPaymentStatus(null);
+            order.setPaymentRef(null);
+        } else {
+            order.setPaymentStatus(PaymentStatus.UNPAID);
+            final String uuid = UUID.randomUUID().toString().replace("-", "");
+            order.setPaymentRef(uuid);
+        }
 
         return orderRepository.save(order);
     }
@@ -88,5 +102,9 @@ public class OrderService {
      order.setReasonCancel(reason);
      order.setCancelledAt(LocalDateTime.now());
      return orderRepository.save(order);
+    }
+
+    public Order findByPaymentRef(String paymentRef){
+        return orderRepository.findByPaymentRef(paymentRef);
     }
 }

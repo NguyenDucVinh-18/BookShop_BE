@@ -1,37 +1,33 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
 import com.cloudinary.utils.ObjectUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.PlaceOrderRequest;
-import vn.edu.iuh.fit.bookshop_be.models.Address;
-import vn.edu.iuh.fit.bookshop_be.models.Order;
-import vn.edu.iuh.fit.bookshop_be.models.PaymentMethod;
-import vn.edu.iuh.fit.bookshop_be.models.User;
-import vn.edu.iuh.fit.bookshop_be.services.AddressService;
-import vn.edu.iuh.fit.bookshop_be.services.OrderService;
-import vn.edu.iuh.fit.bookshop_be.services.PaymentMethodService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.models.*;
+import vn.edu.iuh.fit.bookshop_be.services.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/order")
 public class OrderController{
     private final OrderService orderService;
     private final UserService userService;
-    private final PaymentMethodService paymentMethodService;
     private final AddressService addressService;
+    private final VNPayService vNPayService;
 
-    public OrderController(OrderService orderService, UserService userService, PaymentMethodService paymentMethodService, AddressService addressService) {
+    public OrderController(OrderService orderService, UserService userService, AddressService addressService, VNPayService vNPayService) {
         this.orderService = orderService;
         this.userService = userService;
-        this.paymentMethodService = paymentMethodService;
         this.addressService = addressService;
+        this.vNPayService = vNPayService;
     }
 
     /**
@@ -46,7 +42,6 @@ public class OrderController{
             @RequestBody PlaceOrderRequest request
             ) {
         Map<String, Object> response = new HashMap<>();
-        System.out.println("Received request to place order: " + request);
         try {
             User user = userService.getUserByToken(authHeader);
 
@@ -56,7 +51,7 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            PaymentMethod paymentMethod = paymentMethodService.findById(request.getPaymentMethodId());
+            PaymentMethod paymentMethod = request.getPaymentMethod();
             Address address = addressService.findById(request.getShippingAddressId());
             if (paymentMethod == null) {
                 response.put("status", "error");
@@ -78,10 +73,15 @@ public class OrderController{
                 }
             }
             // Thực hiện đặt hàng
+            Map<String, Object> data = new HashMap<>();
             Order order = orderService.placeOrder(user, paymentMethod, address, request.getNote(), request.getProducts());
+            if(order.getPaymentMethod() == PaymentMethod.BANKING){
+                String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
+                data.put("vnpUrl", vnpUrl);
+            }
             response.put("status", "success");
             response.put("message", "Đặt hàng thành công");
-            Map<String, Object> data = new HashMap<>();
+
             data.put("orderId", order.getId());
             data.put("totalAmount", order.getTotalAmount());
             data.put("orderStatus", order.getStatus());
@@ -91,6 +91,7 @@ public class OrderController{
             data.put("note", order.getNote());
             data.put("user", user.getId());
             data.put("orderItems", order.getOrderItems());
+
             response.put("data", data);
 
 
@@ -153,7 +154,7 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -228,6 +229,53 @@ public class OrderController{
             response.put("message", "Lỗi khi hủy đơn hàng: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @PostMapping("/vnpay_payment")
+    public String handlePlaceOrder(
+//            @RequestHeader("Authorization") String authHeader,
+//            @RequestParam("receiverName") String receiverName,
+//            @RequestParam("receiverAddress") String receiverAddress,
+//            @RequestParam("receiverPhone") String receiverPhone,
+//            @RequestParam("paymentMethod") String paymentMethod,
+            @RequestParam("totalPrice") String totalPrice) throws UnsupportedEncodingException {
+//        User user = userService.getUserByToken(authHeader);
+
+        final String uuid = UUID.randomUUID().toString().replace("-", "");
+
+//        this.productService.handlePlaceOrder(currentUser, session,
+//                receiverName, receiverAddress, receiverPhone,
+//                paymentMethod, uuid);
+
+//        if (!paymentMethod.equals("COD")) {
+            String vnpUrl = this.vNPayService.generateVNPayURL(Double.parseDouble(totalPrice), uuid);
+
+            return vnpUrl;
+//        }
+
+//        return "redirect:/thanks";
+
+    }
+
+    @GetMapping("/thanks")
+    public String getThankYouPage(
+            @RequestParam("vnp_ResponseCode") Optional<String> vnpayResponseCode,
+            @RequestParam("vnp_TxnRef") Optional<String> paymentRef) {
+        Order order = orderService.findByPaymentRef(paymentRef.orElse(""));
+        if (order == null) {
+            return null;
+        }
+        if (vnpayResponseCode.isPresent() && paymentRef.isPresent()) {
+            // thanh toán qua VNPAY, cập nhật trạng thái order
+            if(vnpayResponseCode.get().equals("00")) {
+                order.setPaymentStatus(PaymentStatus.PAID);
+            } else {
+                order.setPaymentStatus(PaymentStatus.FAILED);
+            }
+            orderService.save(order);
+        }
+
+        return order.getPaymentStatus().toString();
     }
 
 

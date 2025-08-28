@@ -53,7 +53,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN")) {
+            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -121,7 +121,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN")) {
+            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy danh sách tất cả khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -167,7 +167,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN")) {
+            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy thông tin khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -218,7 +218,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN")) {
+            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -301,7 +301,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN")) {
+            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

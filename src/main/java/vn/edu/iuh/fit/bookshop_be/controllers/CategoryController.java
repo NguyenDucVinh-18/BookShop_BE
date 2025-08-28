@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.services.CategoryService;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
@@ -51,7 +52,7 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -98,7 +99,7 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy danh sách danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -148,7 +149,7 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -211,7 +212,7 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

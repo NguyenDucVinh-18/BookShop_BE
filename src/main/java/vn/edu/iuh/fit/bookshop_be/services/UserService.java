@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.repositories.UserRepository;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
@@ -81,7 +82,7 @@ public class UserService {
             throw new IllegalArgumentException("Email đã tồn tại ");
         }
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setRole("USER");
+        user.setRole(Role.USER);
         user.setCreatedAt(LocalDateTime.now());
         String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
         user.setAvatarUrl(avatarUrl);

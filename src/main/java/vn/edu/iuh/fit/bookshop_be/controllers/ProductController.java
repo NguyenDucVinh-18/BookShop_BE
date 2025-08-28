@@ -10,6 +10,7 @@ import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.services.CategoryService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductService;
@@ -58,7 +59,7 @@ public class ProductController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -160,7 +161,7 @@ public class ProductController {
                 response.put("message", "Bạn cần đăng nhập để xem danh sách sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xem danh sách sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -231,7 +232,7 @@ public class ProductController {
                 response.put("message", "Bạn cần đăng nhập để xóa sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -274,7 +275,7 @@ public class ProductController {
                 response.put("message", "Bạn cần đăng nhập để cập nhật sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -500,7 +501,7 @@ public class ProductController {
                 response.put("message", "Bạn cần đăng nhập để xóa ảnh khỏi sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa ảnh khỏi sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -548,7 +549,7 @@ public class ProductController {
                 response.put("message", "Bạn cần đăng nhập để thêm ảnh vào sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || !user.getRole().equals("ADMIN")) {
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền thêm ảnh vào sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
