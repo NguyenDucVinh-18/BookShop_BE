@@ -1,7 +1,10 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
@@ -27,6 +30,14 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Value("${base_url}")
+    private String baseUrl;
+
+
 
     public User save(User user) {
         return userRepository.save(user);
@@ -78,6 +89,8 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setPasswordHash(request.getPassword());
         user.setEmail(request.getEmail());
+        user.setEnabled(false);
+        user.setVerificationCode(UUID.randomUUID().toString());
         if(userRepository.findByEmail(user.getEmail()) != null){
             throw new IllegalArgumentException("Email đã tồn tại ");
         }
@@ -87,8 +100,35 @@ public class UserService {
         String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
         user.setAvatarUrl(avatarUrl);
         User savedUser =  userRepository.save(user);
+        sendVerificationEmail(user.getEmail(), user.getVerificationCode());
         return savedUser;
     }
+
+
+    public String sendVerificationEmail(String toEmail, String verificationCode) {
+        String verificationLink = baseUrl + "/api/auth/verify?code=" + verificationCode;
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Xác nhận đăng ký tài khoản");
+        message.setText("Vui lòng nhấp vào liên kết bên dưới để xác thực tài khoản:" + verificationLink);
+
+        mailSender.send(message);
+
+        return verificationCode;
+    }
+
+    public boolean verifyUser(String verificationCode) {
+        User user = userRepository.findByVerificationCode(verificationCode);;
+        if (user.isEnabled()) {
+            return false;
+        }
+        user.setEnabled(true);
+        user.setVerificationCode(null); // Xóa mã xác thực
+        userRepository.save(user);
+        return true;
+    }
+
+
 
 
 

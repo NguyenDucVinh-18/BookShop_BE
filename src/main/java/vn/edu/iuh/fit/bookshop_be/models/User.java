@@ -51,6 +51,12 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ProductReview> productReviews;
 
+    @Column(name = "verification_code", length = 64)
+    private String verificationCode;
+
+    @Column(name = "is_enabled")
+    private boolean isEnabled;
+
     public User() {}
 
     public User(Role role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
@@ -105,4 +111,20 @@ public class User {
 
     public List<ProductReview> getProductReviews() { return productReviews; }
     public void setProductReviews(List<ProductReview> productReviews) { this.productReviews = productReviews; }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
 }

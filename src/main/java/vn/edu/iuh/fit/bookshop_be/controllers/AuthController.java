@@ -1,14 +1,17 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 import vn.edu.iuh.fit.bookshop_be.dtos.LoginRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +30,6 @@ public class AuthController {
     @PostMapping("/signUp")
     @ResponseBody
     public ResponseEntity<Map<String ,Object>> signup(@RequestBody SignUpRequest request){
-//        User user = new User();
-//        user.setUsername(request.getUsername());
-//        user.setPasswordHash(request.getPassword());
-//        user.setEmail(request.getEmail());
         Map<String, Object> response = new HashMap<>();
         try{
             // kiểm tra validation
@@ -56,6 +55,39 @@ public class AuthController {
         }
     }
 
+//    @GetMapping("/verify")
+//    public ResponseEntity<Map<String , String>> verifyUser(@RequestParam("code") String verificationCode) {
+//        Map<String, String> response = new HashMap<>();
+//        try {
+//            boolean verified = userService.verifyUser(verificationCode);
+//            if (verified) {
+//                response.put("message", "xác thực tài khoản thành công");
+//            } else {
+//                response.put("message" ,"xác thực tài khoản không thành công");
+//            }
+//        } catch (IllegalArgumentException e) {
+//            response.put("message" , e.getMessage());
+//        } catch (Exception e) {
+//            response.put("message" , e.getMessage());
+//        }
+//        return ResponseEntity.ok(response);
+//    }
+
+    @GetMapping("/verify")
+    public RedirectView verifyUser(@RequestParam("code") String verificationCode) {
+        boolean verified = userService.verifyUser(verificationCode);
+        String redirectUrl;
+
+        if (verified) {
+            redirectUrl = "http://localhost:3000/";
+        } else {
+            redirectUrl = "http://localhost:3000/verify-failed";
+        }
+
+        return new RedirectView(redirectUrl);
+    }
+
+
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
@@ -76,6 +108,12 @@ public class AuthController {
                 response.put("message" , "Tài khoản hoặc mật khẩu không chính xác");
                 return ResponseEntity.status(401).body(response);
             }
+
+            if(!existingUser.isEnabled()){
+                response.put("message" , "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.");
+                return ResponseEntity.status(401).body(response);
+            }
+
             if (userService.checkPassword(user.getPasswordHash(), existingUser.getPasswordHash())) {
                 String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole().toString());
                 String refreshToken = jwtUtil.generateRefreshToken(existingUser.getEmail());

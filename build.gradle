@@ -52,6 +52,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.cloud/google-cloud-aiplatform
     implementation("com.google.cloud:google-cloud-aiplatform:3.69.0")
+
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail
+    implementation("org.springframework.boot:spring-boot-starter-mail:3.5.4")
 }
 
 tasks.named('test') {
