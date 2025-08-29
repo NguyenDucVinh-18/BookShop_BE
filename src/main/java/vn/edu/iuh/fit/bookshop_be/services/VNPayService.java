@@ -1,12 +1,15 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -24,6 +27,8 @@ public class VNPayService {
 
 
     private String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+
+    private String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
     public String generateVNPayURL(double amountDouble, String paymentRef)
             throws UnsupportedEncodingException {
@@ -95,6 +100,86 @@ public class VNPayService {
 
         return paymentUrl;
     }
+
+    public String refundVNPay(String paymentRef,
+                              long amount,
+                              String transDate,
+                              String createdBy,
+                              String transactionType) throws IOException {
+
+        String vnp_RequestId = String.valueOf(System.currentTimeMillis());
+        String vnp_Version = "2.1.0";
+        String vnp_Command = "refund";
+
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+
+        String vnp_IpAddr = "127.0.0.1";
+
+        Map<String, String> vnp_Params = new LinkedHashMap<>();
+        vnp_Params.put("vnp_RequestId", vnp_RequestId);
+        vnp_Params.put("vnp_Version", vnp_Version);
+        vnp_Params.put("vnp_Command", vnp_Command);
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_TransactionType", transactionType);
+        vnp_Params.put("vnp_TxnRef", paymentRef);
+        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
+        vnp_Params.put("vnp_OrderInfo", "Hoàn tiền đơn hàng " + paymentRef);
+        vnp_Params.put("vnp_TransactionDate", transDate);
+        vnp_Params.put("vnp_CreateBy", createdBy);
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+
+        // Hash Data (theo tài liệu VNPAY)
+        String hash_Data = String.join("|",
+                vnp_RequestId,
+                vnp_Version,
+                vnp_Command,
+                vnp_TmnCode,
+                transactionType,
+                paymentRef,
+                String.valueOf(amount * 100),
+                "", // transactionNo
+                transDate,
+                createdBy,
+                vnp_CreateDate,
+                vnp_IpAddr,
+                "Hoàn tiền đơn hàng " + paymentRef
+        );
+
+        String vnp_SecureHash = hmacSHA512(secretKey, hash_Data);
+        vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
+
+        // Convert Map -> JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(vnp_Params);
+
+        // Gửi request
+        URL url = new URL(vnp_ApiUrl);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        try (OutputStream os = con.getOutputStream()) {
+            os.write(jsonRequest.getBytes(StandardCharsets.UTF_8));
+        }
+
+        int status = con.getResponseCode();
+        InputStream inputStream = (status < 400) ? con.getInputStream() : con.getErrorStream();
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+            response.append(line);
+        }
+        in.close();
+
+        return response.toString();
+    }
+
 
     public String hmacSHA512(final String key, final String data) {
         try {

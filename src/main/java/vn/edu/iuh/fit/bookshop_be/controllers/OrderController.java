@@ -13,6 +13,8 @@ import vn.edu.iuh.fit.bookshop_be.services.*;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -276,6 +278,54 @@ public class OrderController{
         }
 
         return order.getPaymentStatus().toString();
+    }
+
+    @PostMapping("/refund")
+    public ResponseEntity<Map<String, Object>> refundOrder(
+            @RequestParam String paymentRef,
+            @RequestParam(defaultValue = "02") String transactionType) // 02: toàn bộ
+    {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Order order = orderService.findByPaymentRef(paymentRef);
+            if (order == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy đơn hàng với paymentRef = " + paymentRef);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (order.getPaymentStatus() != PaymentStatus.PAID) {
+                response.put("status", "error");
+                response.put("message", "Đơn hàng chưa thanh toán, không thể hoàn tiền");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            String transDate = order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+            String result = vNPayService.refundVNPay(
+                    order.getPaymentRef(),
+                    order.getTotalAmount().longValue(),
+                    transDate,
+                    "adminRefund",
+                    transactionType
+            );
+
+            order.setPaymentStatus(PaymentStatus.REFUNDED);
+            order.setStatus("cancelled");
+            order.setCancelledAt(LocalDateTime.now());
+            orderService.save(order);
+
+            response.put("status", "success");
+            response.put("message", "Hoàn tiền thành công cho đơn hàng " + order.getId());
+            response.put("vnpResponse", result);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi hoàn tiền: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
 
