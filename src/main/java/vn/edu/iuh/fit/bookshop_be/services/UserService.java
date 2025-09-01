@@ -278,6 +278,11 @@ public class UserService {
         return userRepository.findByVerificationCode(code);
     }
 
+    public User changePassword(User user, String newPassword) {
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
+    }
+
 
 
 

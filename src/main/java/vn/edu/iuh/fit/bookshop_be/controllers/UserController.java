@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.ChangePasswordRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
 import vn.edu.iuh.fit.bookshop_be.models.User;
@@ -150,6 +151,67 @@ public class UserController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi khi cập nhật thông tin: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Đổi mật khẩu cho người dùng
+     * @param authHeader
+     * @param request
+     * @return trả về thông tin người dùng sau khi đổi mật khẩu
+     */
+    @PostMapping("/changePassword")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody ChangePasswordRequest request
+            ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để đổi mật khẩu");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            String currentPassword = request.getCurrentPassword();
+            String newPassword = request.getNewPassword();
+
+            if (!userService.checkPassword(currentPassword, user.getPasswordHash())) {
+                response.put("status", "error");
+                response.put("message", "Mật khẩu hiện tại không đúng");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+
+            if (currentPassword == null || newPassword == null || currentPassword.isEmpty() || newPassword.isEmpty() ) {
+                response.put("status", "error");
+                response.put("message", "Vui lòng điền đầy đủ thông tin mật khẩu");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+
+            User userChange = userService.changePassword(user, newPassword);
+
+            response.put("status", "success");
+            response.put("message", "Đổi mật khẩu thành công");
+            Map<String, Object> data = new HashMap<>();
+            User userRender = new User();
+            userRender.setId(userChange.getId());
+            userRender.setUsername(userChange.getUsername());
+            userRender.setEmail(userChange.getEmail());
+            userRender.setRole(userChange.getRole());
+            userRender.setAvatarUrl(userChange.getAvatarUrl());
+            userRender.setPhone(userChange.getPhone());
+            data.put("user", userRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi đổi mật khẩu: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
