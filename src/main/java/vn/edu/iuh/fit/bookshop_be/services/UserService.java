@@ -96,6 +96,7 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setPasswordHash(request.getPassword());
         user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
         user.setEnabled(false);
         user.setVerificationCode(UUID.randomUUID().toString());
         if(userRepository.findByEmail(user.getEmail()) != null){
@@ -271,6 +272,10 @@ public class UserService {
         user.setVerificationCode(null); // Xóa mã xác thực
         userRepository.save(user);
         return true;
+    }
+
+    public User findByVerificationCode(String code) {
+        return userRepository.findByVerificationCode(code);
     }
 
 

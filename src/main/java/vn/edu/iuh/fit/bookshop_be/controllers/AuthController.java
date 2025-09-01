@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 import vn.edu.iuh.fit.bookshop_be.dtos.LoginRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
@@ -37,6 +38,12 @@ public class AuthController {
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
+            //kiem tra so dien thoai
+            if(request.getPhone() != null && !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
+                response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
             // Gọi UserService để đăng kí user
             userService.signUp(request);
             response.put("message" , "Đăng kí tài khoản thành công");
@@ -55,36 +62,60 @@ public class AuthController {
         }
     }
 
-//    @GetMapping("/verify")
-//    public ResponseEntity<Map<String , String>> verifyUser(@RequestParam("code") String verificationCode) {
-//        Map<String, String> response = new HashMap<>();
-//        try {
-//            boolean verified = userService.verifyUser(verificationCode);
-//            if (verified) {
-//                response.put("message", "xác thực tài khoản thành công");
-//            } else {
-//                response.put("message" ,"xác thực tài khoản không thành công");
-//            }
-//        } catch (IllegalArgumentException e) {
-//            response.put("message" , e.getMessage());
-//        } catch (Exception e) {
-//            response.put("message" , e.getMessage());
-//        }
-//        return ResponseEntity.ok(response);
-//    }
+    @PostMapping("/resendVerificationEmail")
+    public ResponseEntity<Map<String, String>> resendVerificationEmail(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        Map<String, String> response = new HashMap<>();
+        try {
+            if (email == null || email.isEmpty()) {
+                response.put("message", "Email không được bỏ trống");
+                return ResponseEntity.status(400).body(response);
+            }
+            System.out.println(email);
+            User user = userService.findByEmail(email);
+            if (user == null) {
+                response.put("message", "Không tìm thấy người dùng với email đã cho");
+                return ResponseEntity.status(404).body(response);
+            }
+            if (user.isEnabled()) {
+                response.put("message", "Tài khoản đã được xác thực");
+                return ResponseEntity.status(400).body(response);
+            }
+            userService.sendVerificationEmail(email, user.getVerificationCode());
+
+            response.put("message", "Gửi lại email xác thực thành công. Vui lòng kiểm tra email của bạn.");
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 
     @GetMapping("/verify")
     public RedirectView verifyUser(@RequestParam("code") String verificationCode) {
-        boolean verified = userService.verifyUser(verificationCode);
-        String redirectUrl;
+        try{
+            User existingUser = userService.findByVerificationCode(verificationCode);
+            boolean verified = userService.verifyUser(verificationCode);
+            String redirectUrl;
 
-        if (verified) {
-            redirectUrl = "http://localhost:3000/";
-        } else {
-            redirectUrl = "http://localhost:3000/verify-failed";
+            if (verified) {
+                String token = jwtUtil.generateAccessToken(existingUser.getEmail(), Role.USER.toString());
+
+                // Redirect về FE kèm token trên URL
+                redirectUrl = "http://localhost:5173/verify-success?token=" + token;
+            } else {
+                redirectUrl = "http://localhost:5173/verify-failed";
+            }
+
+            return new RedirectView(redirectUrl);
+        } catch (Exception e) {
+            return new RedirectView("http://localhost:5173/verify-failed");
         }
-
-        return new RedirectView(redirectUrl);
     }
 
 
@@ -109,11 +140,6 @@ public class AuthController {
                 return ResponseEntity.status(401).body(response);
             }
 
-            if(!existingUser.isEnabled()){
-                response.put("message" , "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.");
-                return ResponseEntity.status(401).body(response);
-            }
-
             if (userService.checkPassword(user.getPasswordHash(), existingUser.getPasswordHash())) {
                 String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole().toString());
                 String refreshToken = jwtUtil.generateRefreshToken(existingUser.getEmail());
@@ -128,6 +154,8 @@ public class AuthController {
                 userInfo.put("id", existingUser.getId());
                 userInfo.put("avatar", existingUser.getAvatarUrl());
                 userInfo.put("role", existingUser.getRole());
+                userInfo.put("phone", existingUser.getPhone());
+                userInfo.put("isEnabled", existingUser.isEnabled());
 
                 response.put("message", "Đăng nhập thành công");
                 response.put("status", "success");
