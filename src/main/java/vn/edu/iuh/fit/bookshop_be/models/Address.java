@@ -11,17 +11,21 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name= "number", nullable = false)
-    private String number;
 
     @Column(name = "street")
     private String street;
+
+    @Column(name = "ward")
+    private String ward;
 
     @Column(name = "district" )
     private String district;
 
     @Column(name = "city")
     private String city;
+
+    @Column(name = "note")
+    private String note;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -38,13 +42,6 @@ public class Address {
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
 
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
 
     public String getDistrict() {
         return district;
@@ -58,16 +55,19 @@ public class Address {
     public void setUser(User user) { this.user = user; }
 
 
-
-    public Address(Integer id, String number, String street, String district, String city, User user) {
-        this.id = id;
-        this.number = number;
-        this.street = street;
-        this.district = district;
-        this.city = city;
-        this.user = user;
+    public String getWard() {
+        return ward;
     }
 
-    public Address() {
+    public void setWard(String ward) {
+        this.ward = ward;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }

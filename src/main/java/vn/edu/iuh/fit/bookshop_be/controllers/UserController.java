@@ -172,10 +172,11 @@ public class UserController {
             }
 
             Address address = new Address();
-            address.setNumber(request.getNumber());
             address.setStreet(request.getStreet());
+            address.setWard(request.getWard());
             address.setDistrict(request.getDistrict());
             address.setCity(request.getCity());
+            address.setNote(request.getNote());
             address.setUser(user);
             Address savedAddress = addressService.save(address);
 
@@ -288,10 +289,11 @@ public class UserController {
             }
 
             Address address = addressService.findById(id);
-            address.setNumber(request.getNumber());
             address.setStreet(request.getStreet());
+            address.setWard(request.getWard());
             address.setDistrict(request.getDistrict());
             address.setCity(request.getCity());
+            address.setNote(request.getNote());
             address.setUser(user);
             addressService.save(address);
 

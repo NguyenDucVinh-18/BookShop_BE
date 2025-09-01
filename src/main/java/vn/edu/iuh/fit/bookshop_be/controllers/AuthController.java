@@ -199,6 +199,7 @@ public class AuthController {
             userRender.setEmail(user.getEmail());
             userRender.setRole(user.getRole());
             userRender.setAvatarUrl(user.getAvatarUrl());
+            userRender.setPhone(user.getPhone());
 
             Map<String, Object> data = new HashMap<>();
             data.put("user", userRender);
