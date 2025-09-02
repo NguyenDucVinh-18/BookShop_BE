@@ -19,8 +19,9 @@ public class Order {
     @JsonIgnore
     private User user;
 
-    @Column(nullable = false, length = 20)
-    private String status; // e.g. pending, paid, shipped, completed, cancelled
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private OrderStatus status;
 
     @Column(name = "total_amount", precision = 13, scale = 2)
     private BigDecimal totalAmount;
@@ -34,10 +35,6 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "payment_method")
     private PaymentMethod paymentMethod;
-
-    @ManyToOne
-    @JoinColumn(name = "shipping_address_id")
-    private Address shippingAddress;
 
     @Column(name = "reason_cancel")
     private String reasonCancel;
@@ -55,15 +52,11 @@ public class Order {
     @Column(name = "payment_status", length = 20)
     private PaymentStatus paymentStatus;
 
+    @Column(name = "address")
+    private String address;
 
-    public Order() {}
-
-    public Order(User user, String status, BigDecimal totalAmount, LocalDateTime createdAt) {
-        this.user = user;
-        this.status = status;
-        this.totalAmount = totalAmount;
-        this.createdAt = createdAt;
-    }
+    @Column(name = "phone")
+    private String phone;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -71,8 +64,13 @@ public class Order {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
@@ -89,14 +87,6 @@ public class Order {
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
-    }
-
-    public Address getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(Address shippingAddress) {
-        this.shippingAddress = shippingAddress;
     }
 
     public String getReasonCancel() {
@@ -137,6 +127,22 @@ public class Order {
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }
 

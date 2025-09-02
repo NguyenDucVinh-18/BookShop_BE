@@ -9,6 +9,7 @@ import java.util.List;
 public class PlaceOrderRequest {
     private List<ProductOrderRequest> products;
     private PaymentMethod paymentMethod;
-    private Integer shippingAddressId;
+    private String address;
+    private String phone;
     private String note;
 }

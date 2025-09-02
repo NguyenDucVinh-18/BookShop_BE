@@ -54,15 +54,9 @@ public class OrderController{
             }
 
             PaymentMethod paymentMethod = request.getPaymentMethod();
-            Address address = addressService.findById(request.getShippingAddressId());
             if (paymentMethod == null) {
                 response.put("status", "error");
                 response.put("message", "Phương thức thanh toán không hợp lệ");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
-            if (address == null) {
-                response.put("status", "error");
-                response.put("message", "Địa chỉ giao hàng không hợp lệ");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
@@ -74,9 +68,22 @@ public class OrderController{
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
             }
+
+            if(request.getAddress() == null || request.getAddress().isEmpty()){
+                response.put("status", "error");
+                response.put("message", "Địa chỉ giao hàng không được để trống");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            if(request.getPhone() == null || request.getPhone().isEmpty() || !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
+                response.put("status", "error");
+                response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
             // Thực hiện đặt hàng
             Map<String, Object> data = new HashMap<>();
-            Order order = orderService.placeOrder(user, paymentMethod, address, request.getNote(), request.getProducts());
+            Order order = orderService.placeOrder(user, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts());
             if(order.getPaymentMethod() == PaymentMethod.BANKING){
                 String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
                 data.put("vnpUrl", vnpUrl);
@@ -88,7 +95,7 @@ public class OrderController{
             data.put("totalAmount", order.getTotalAmount());
             data.put("orderStatus", order.getStatus());
             data.put("createdAt", order.getCreatedAt());
-            data.put("shippingAddress", order.getShippingAddress());
+            data.put("shippingAddress", order.getAddress());
             data.put("paymentMethod", order.getPaymentMethod());
             data.put("note", order.getNote());
             data.put("user", user.getId());
@@ -169,7 +176,7 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            order = orderService.updateOrderStatus(orderId, status);
+            order = orderService.updateOrderStatus(orderId, OrderStatus.valueOf(status));
             response.put("status", "success");
             response.put("message", "Cập nhật trạng thái đơn hàng thành công");
             response.put("data", order);
@@ -192,10 +199,16 @@ public class OrderController{
     public ResponseEntity<Map<String, Object>> cancelOrder(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Integer orderId,
-            @RequestBody String reason) {
+            @RequestBody Map<String, String> reason) {
         Map<String, Object> response = new HashMap<>();
         try {
             User user = userService.getUserByToken(authHeader);
+            String reasonStr = reason.get("reason");
+            if (reasonStr == null || reasonStr.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Lý do hủy đơn hàng không được để trống");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
             if (user == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để hủy đơn hàng");
@@ -215,13 +228,13 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if(!order.getStatus().equalsIgnoreCase("PENDING")){
+            if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.UNPAID) {
                 response.put("status", "error");
-                response.put("message", "Chỉ có thể hủy đơn hàng đang chờ xử lý");
+                response.put("message", "Chỉ có thể hủy đơn hàng ở trạng thái PENDING hoặc UNPAID");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            order = orderService.cancelOrder(order, reason);
+            order = orderService.cancelOrder(order, reasonStr);
             response.put("status", "success");
             response.put("message", "Hủy đơn hàng thành công");
             response.put("data", order);
@@ -271,6 +284,7 @@ public class OrderController{
             // thanh toán qua VNPAY, cập nhật trạng thái order
             if(vnpayResponseCode.get().equals("00")) {
                 order.setPaymentStatus(PaymentStatus.PAID);
+                order.setStatus(OrderStatus.PENDING);
             } else {
                 order.setPaymentStatus(PaymentStatus.FAILED);
             }
@@ -312,7 +326,7 @@ public class OrderController{
             );
 
             order.setPaymentStatus(PaymentStatus.REFUNDED);
-            order.setStatus("cancelled");
+            order.setStatus(OrderStatus.CANCELED);
             order.setCancelledAt(LocalDateTime.now());
             orderService.save(order);
 

@@ -26,14 +26,14 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public Order placeOrder(User user, PaymentMethod paymentMethod, Address address, String note, List<ProductOrderRequest> productOrderRequests) {
+    public Order placeOrder(User user, PaymentMethod paymentMethod, String address, String phone ,String note, List<ProductOrderRequest> productOrderRequests) {
         Order order = new Order();
         order.setUser(user);
         order.setPaymentMethod(paymentMethod);
-        order.setShippingAddress(address);
+        order.setAddress(address);
+        order.setPhone(phone);
         order.setNote(note);
         order.setCreatedAt(LocalDateTime.now());
-        order.setStatus("PENDING");
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -49,6 +49,11 @@ public class OrderService {
             orderItem.setPrice(product.getPrice());
             orderItem.setQuantity(request.getQuantity());
             orderItem.setProductName(product.getProductName());
+            if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
+                orderItem.setProductImage(product.getImageUrls().get(0));
+            } else {
+                orderItem.setProductImage("https://res.cloudinary.com/dzljcagp9/image/upload/v1756805790/default_product_image_fdywaa.png");
+            }
             totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
             orderItems.add(orderItem);
 
@@ -59,10 +64,12 @@ public class OrderService {
         if (paymentMethod == PaymentMethod.COD){
             order.setPaymentStatus(null);
             order.setPaymentRef(null);
+            order.setStatus(OrderStatus.PENDING);
         } else {
             order.setPaymentStatus(PaymentStatus.UNPAID);
             final String uuid = UUID.randomUUID().toString().replace("-", "");
             order.setPaymentRef(uuid);
+            order.setStatus(OrderStatus.UNPAID);
         }
 
         return orderRepository.save(order);
@@ -90,7 +97,7 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
     }
 
-    public Order updateOrderStatus(Integer orderId, String status) {
+    public Order updateOrderStatus(Integer orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
         order.setStatus(status);
@@ -98,7 +105,9 @@ public class OrderService {
     }
 
     public Order cancelOrder(Order order, String reason) {
-     updateOrderStatus(order.getId(), "CANCELED");
+     updateOrderStatus(order.getId(), OrderStatus.CANCELED);
+     order.setPaymentRef(null);
+     order.setPaymentStatus(null);
      order.setReasonCancel(reason);
      order.setCancelledAt(LocalDateTime.now());
      return orderRepository.save(order);

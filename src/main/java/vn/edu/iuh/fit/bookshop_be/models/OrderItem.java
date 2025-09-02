@@ -27,19 +27,12 @@ public class OrderItem {
     @Column(name = "product_name")
     private String productName;
 
+    @Column(name = "product_image")
+    private String productImage;
+
     @Column(name = "is_reviewed", nullable = false)
     private boolean isReviewed = false;
 
-
-
-    public OrderItem() {}
-
-    public OrderItem(Order order, Product product, Integer quantity, BigDecimal price) {
-        this.order = order;
-        this.product = product;
-        this.quantity = quantity;
-        this.price = price;
-    }
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -70,6 +63,14 @@ public class OrderItem {
 
     public void setReviewed(boolean reviewed) {
         isReviewed = reviewed;
+    }
+
+    public String getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
     }
 }
 

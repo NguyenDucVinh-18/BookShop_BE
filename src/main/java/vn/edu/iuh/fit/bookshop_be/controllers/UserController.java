@@ -414,4 +414,44 @@ public class UserController {
         }
     }
 
+    /**
+     * Lấy thông tin địa chỉ theo ID
+     * @param id
+     * @param authHeader
+     * @return thông tin địa chỉ
+     */
+    @GetMapping("/getAddress/{addressId}")
+    public ResponseEntity<Map<String, Object>> getAddressById(
+            @PathVariable("addressId") Integer id,
+            @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem địa chỉ");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            Address address = addressService.findByIdAndUser(id, user);
+            if (address == null) {
+                response.put("status", "error");
+                response.put("message", "Địa chỉ không tồn tại hoặc bạn không có quyền xem địa chỉ này");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            response.put("status", "success");
+            response.put("message", "Lấy địa chỉ thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("address", address);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy địa chỉ: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

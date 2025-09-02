@@ -123,7 +123,7 @@ public class ProductController {
             }
             if(imageUrls == null || imageUrls.isEmpty()) {
                 // Nếu không có ảnh nào được tải lên, sử dụng ảnh mặc định
-                imageUrls.add("https://res.cloudinary.com/dzljcagp9/image/upload/v1755405380/images_p1gvcs.png");
+                imageUrls.add("https://res.cloudinary.com/dzljcagp9/image/upload/v1756805790/default_product_image_fdywaa.png");
             }
             savedProduct.setImageUrls(imageUrls);
             savedProduct = productService.save(savedProduct);
