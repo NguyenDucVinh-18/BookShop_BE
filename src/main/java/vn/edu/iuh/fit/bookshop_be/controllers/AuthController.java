@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
+import vn.edu.iuh.fit.bookshop_be.dtos.CreateAccountRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.LoginRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
@@ -34,13 +36,17 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         try{
             // kiểm tra validation
-            if(request.getEmail() == null || request.getUsername() == null || request.getPassword()== null){
+            if(request.getEmail() == null || request.getUsername() == null || request.getPassword()== null || request.getPhone() == null){
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
             //kiem tra so dien thoai
-            if(request.getPhone() != null && !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
+            if(request.getPhone() != null || !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
                 response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+            if(userService.findByEmail(request.getEmail()) != null){
+                response.put("message" , "Email đã tồn tại");
                 return ResponseEntity.status(400).body(response);
             }
 
@@ -205,6 +211,105 @@ public class AuthController {
             data.put("user", userRender);
             response.put("data", data);
 
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Thêm tài khoản mới (chỉ dành cho SALE và MANAGER)
+     * @param request
+     * @param authHeader
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PostMapping("/createAccount")
+    public ResponseEntity<Map<String, Object>> addUser(
+            @RequestBody CreateAccountRequest request,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(403).body(response);
+            }
+            // kiểm tra validation
+            if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null || request.getPhone() == null || request.getRole() == null) {
+                response.put("message", "Điền đầy đủ thông tin");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            if(userService.findByEmail(request.getEmail()) != null){
+                response.put("message", "Email đã tồn tại");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            if(request.getEmail() != null && !request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                response.put("message", "Email không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            //kiem tra so dien thoai
+            if (request.getPhone() != null && !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")) {
+                response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            // Gọi UserService để đăng kí user
+            userService.createAccount(request.getUsername(), request.getEmail(), request.getPassword(), request.getPhone(), request.getRole());
+            response.put("message", "Thêm tài khoản thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", request);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Lấy danh sách tất cả người dùng (chỉ dành cho SALE và MANAGER)
+     * @param authHeader
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @GetMapping("/getAllUsers")
+    public ResponseEntity<Map<String, Object>> getAllUsers(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user.getRole() == null || (user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(403).body(response);
+            }
+            List<User> users = userService.getAllUsersByRole(Role.USER);
+            response.put("message", "Lấy danh sách người dùng thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            List<User> usersRender = users.stream().map(u -> {
+                User userRender = new User();
+                userRender.setId(u.getId());
+                userRender.setUsername(u.getUsername());
+                userRender.setEmail(u.getEmail());
+                userRender.setRole(u.getRole());
+                userRender.setAvatarUrl(u.getAvatarUrl());
+                userRender.setPhone(u.getPhone());
+                userRender.setCreatedAt(u.getCreatedAt());
+                return userRender;
+            }).toList();
+            data.put("users", usersRender);
+
+            response.put("data", data);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("message", "Lỗi hệ thống: " + e.getMessage());

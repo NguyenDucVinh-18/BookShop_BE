@@ -10,6 +10,7 @@ import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.ChangePasswordRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.AddressService;
@@ -101,7 +102,7 @@ public class UserController {
      * @param request
      * @return trả về thông tin người dùng sau khi cập nhật
      */
-    @PutMapping("/updateInfo")
+        @PutMapping("/updateInfo")
     public ResponseEntity<Map<String, Object>> updateInfo(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UpdateInfoRequest request
@@ -453,5 +454,67 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * Cập nhật thông tin tài khoản (chỉ dành cho SALE và MANAGER)
+     * @param request
+     * @param authHeader
+     * @param id
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PutMapping("/updateInfoAccount/{id}")
+    public ResponseEntity<Map<String, Object>> updateInfoAccount(
+            @RequestBody UpdateInfoRequest request,
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("id") Integer id
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user.getRole() == null || (user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            user = userService.findById(id);
+            if (user == null) {
+                response.put("message", "Người dùng không tồn tại");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            String username = request.getUsername();
+            String phone = request.getPhone();
+
+            // kiểm tra validation
+            if (username == null || phone == null) {
+                response.put("message", "Điền đầy đủ thông tin");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            //kiem tra so dien thoai
+            if (phone != null && !phone.matches("^(\\+84|0)\\d{9,10}$")) {
+                response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            // Gọi UserService để cập nhật thông tin user
+            userService.updateInfoAccount(user, username, phone);
+            response.put("message", "Cập nhật thông tin tài khoản thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", userService.findById(user.getId()));
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 
 }

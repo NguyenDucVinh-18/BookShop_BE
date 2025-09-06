@@ -20,6 +20,7 @@ import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -283,8 +284,30 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User createAccount(String username, String email, String password, String phone, Role role) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPasswordHash(password);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setEnabled(true);
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        user.setRole(role);
+        user.setCreatedAt(LocalDateTime.now());
+        String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
+        user.setAvatarUrl(avatarUrl);
+        User savedUser =  userRepository.save(user);
+        return savedUser;
+    }
 
+    public List<User> getAllUsersByRole(Role role) {
+        return userRepository.findByRole(role);
+    }
 
-
+    public User updateInfoAccount(User user, String username, String phone) {
+        user.setUsername(username);
+        user.setPhone(phone);
+        return userRepository.save(user);
+    }
 
 }
