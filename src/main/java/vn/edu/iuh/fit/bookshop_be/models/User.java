@@ -57,6 +57,9 @@ public class User {
     @Column(name = "is_enabled")
     private boolean isEnabled;
 
+    @Column(name = "is_active")
+    private boolean isActive;
+
     public User() {}
 
     public User(Role role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
@@ -126,5 +129,13 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         isEnabled = enabled;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

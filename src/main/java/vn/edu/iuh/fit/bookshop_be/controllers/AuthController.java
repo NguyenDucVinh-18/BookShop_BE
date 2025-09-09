@@ -30,6 +30,11 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
+    /**
+     * Đăng ký tài khoản
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
     @PostMapping("/signUp")
     @ResponseBody
     public ResponseEntity<Map<String ,Object>> signup(@RequestBody SignUpRequest request){
@@ -41,7 +46,7 @@ public class AuthController {
                 return ResponseEntity.status(400).body(response);
             }
             //kiem tra so dien thoai
-            if(request.getPhone() != null || !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
+            if (request.getPhone() != null && !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")) {
                 response.put("message", "Số điện thoại không hợp lệ");
                 return ResponseEntity.status(400).body(response);
             }
@@ -68,6 +73,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * Gửi lại email xác thực
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
     @PostMapping("/resendVerificationEmail")
     public ResponseEntity<Map<String, String>> resendVerificationEmail(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -102,6 +112,11 @@ public class AuthController {
     }
 
 
+    /**
+     * Xác thực tài khoản người dùng
+     * @param verificationCode
+     * @return RedirectView chuyển hướng người dùng đến trang xác thực thành công hoặc thất bại
+     */
     @GetMapping("/verify")
     public RedirectView verifyUser(@RequestParam("code") String verificationCode) {
         try{
@@ -110,7 +125,7 @@ public class AuthController {
             String redirectUrl;
 
             if (verified) {
-                String token = jwtUtil.generateAccessToken(existingUser.getEmail(), Role.USER.toString());
+                String token = jwtUtil.generateAccessToken(existingUser.getEmail(), Role.CUSTOMER.toString());
 
                 // Redirect về FE kèm token trên URL
                 redirectUrl = "http://localhost:5173/verify-success?token=" + token;
@@ -126,6 +141,11 @@ public class AuthController {
 
 
 
+    /**
+     * Đăng nhập
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
         User user = new User();
@@ -184,6 +204,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * Lấy thông tin người dùng từ token
+     * @param authHeader
+     * @return ResponseEntity với thông tin kết quả
+     */
     @GetMapping("/account")
     public ResponseEntity<Map<String, Object>> getUserInfo(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
@@ -219,7 +244,7 @@ public class AuthController {
     }
 
     /**
-     * Thêm tài khoản mới (chỉ dành cho SALE và MANAGER)
+     * Thêm tài khoản mới (chỉ dành cho STAFF và MANAGER)
      * @param request
      * @param authHeader
      * @return ResponseEntity với thông tin kết quả
@@ -233,7 +258,7 @@ public class AuthController {
         try {
             User user = userService.getUserByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || ( user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
+            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(403).body(response);
             }
@@ -277,45 +302,9 @@ public class AuthController {
         }
     }
 
-    /**
-     * Lấy danh sách tất cả người dùng (chỉ dành cho SALE và MANAGER)
-     * @param authHeader
-     * @return ResponseEntity với thông tin kết quả
-     */
-    @GetMapping("/getAllUsers")
-    public ResponseEntity<Map<String, Object>> getAllUsers(@RequestHeader("Authorization") String authHeader) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = userService.getUserByToken(authHeader);
-            // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || (user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
-                response.put("message", "Bạn không có quyền thực hiện hành động này");
-                return ResponseEntity.status(403).body(response);
-            }
-            List<User> users = userService.getAllUsersByRole(Role.USER);
-            response.put("message", "Lấy danh sách người dùng thành công");
-            response.put("status", "success");
-            Map<String, Object> data = new HashMap<>();
-            List<User> usersRender = users.stream().map(u -> {
-                User userRender = new User();
-                userRender.setId(u.getId());
-                userRender.setUsername(u.getUsername());
-                userRender.setEmail(u.getEmail());
-                userRender.setRole(u.getRole());
-                userRender.setAvatarUrl(u.getAvatarUrl());
-                userRender.setPhone(u.getPhone());
-                userRender.setCreatedAt(u.getCreatedAt());
-                return userRender;
-            }).toList();
-            data.put("users", usersRender);
 
-            response.put("data", data);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("message", "Lỗi hệ thống: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
-        }
-    }
+
+
 
 
 }

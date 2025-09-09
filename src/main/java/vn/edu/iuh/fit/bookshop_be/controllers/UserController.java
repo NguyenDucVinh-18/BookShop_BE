@@ -456,7 +456,7 @@ public class UserController {
     }
 
     /**
-     * Cập nhật thông tin tài khoản (chỉ dành cho SALE và MANAGER)
+     * Cập nhật thông tin tài khoản (chỉ dành cho STAFF và MANAGER)
      * @param request
      * @param authHeader
      * @param id
@@ -472,7 +472,7 @@ public class UserController {
         try {
             User user = userService.getUserByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || (user.getRole() != Role.SALE && user.getRole() != Role.MANAGER)) {
+            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(404).body(response);
             }
@@ -485,21 +485,25 @@ public class UserController {
 
             String username = request.getUsername();
             String phone = request.getPhone();
+            String email = request.getEmail();
 
             // kiểm tra validation
-            if (username == null || phone == null) {
+            if (username == null || phone == null || email == null ||
+                    username.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+                response.put("status", "error");
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
 
             //kiem tra so dien thoai
             if (phone != null && !phone.matches("^(\\+84|0)\\d{9,10}$")) {
+                response.put("status", "error");
                 response.put("message", "Số điện thoại không hợp lệ");
                 return ResponseEntity.status(400).body(response);
             }
 
             // Gọi UserService để cập nhật thông tin user
-            userService.updateInfoAccount(user, username, phone);
+            userService.updateInfoAccount(user, username, phone, email);
             response.put("message", "Cập nhật thông tin tài khoản thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
@@ -515,6 +519,49 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    /**
+     * Lấy danh sách tất cả khách hàng (chỉ dành cho STAFF và MANAGER)
+     * @param authHeader
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @GetMapping("/getAllCustomers")
+    public ResponseEntity<Map<String, Object>> getAllUsers(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(403).body(response);
+            }
+            List<User> users = userService.getAllUsersByRole(Role.CUSTOMER);
+            response.put("message", "Lấy danh sách khách hàng thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            List<User> usersRender = users.stream().map(u -> {
+                User userRender = new User();
+                userRender.setId(u.getId());
+                userRender.setUsername(u.getUsername());
+                userRender.setEmail(u.getEmail());
+                userRender.setRole(u.getRole());
+                userRender.setAvatarUrl(u.getAvatarUrl());
+                userRender.setPhone(u.getPhone());
+                userRender.setCreatedAt(u.getCreatedAt());
+                userRender.setActive(u.isActive());
+                userRender.setEnabled(u.isEnabled());
+                return userRender;
+            }).toList();
+            data.put("users", usersRender);
+
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 
 
 }

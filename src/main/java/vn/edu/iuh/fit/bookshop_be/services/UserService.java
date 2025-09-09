@@ -104,10 +104,11 @@ public class UserService {
             throw new IllegalArgumentException("Email đã tồn tại ");
         }
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         user.setCreatedAt(LocalDateTime.now());
         String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
         user.setAvatarUrl(avatarUrl);
+        user.setActive(false);
         User savedUser =  userRepository.save(user);
         sendVerificationEmail(user.getEmail(), user.getVerificationCode());
         return savedUser;
@@ -271,6 +272,7 @@ public class UserService {
         }
         user.setEnabled(true);
         user.setVerificationCode(null); // Xóa mã xác thực
+        user.setActive(true);
         userRepository.save(user);
         return true;
     }
@@ -296,6 +298,7 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
         user.setAvatarUrl(avatarUrl);
+        user.setActive(true);
         User savedUser =  userRepository.save(user);
         return savedUser;
     }
@@ -304,9 +307,10 @@ public class UserService {
         return userRepository.findByRole(role);
     }
 
-    public User updateInfoAccount(User user, String username, String phone) {
+    public User updateInfoAccount(User user, String username, String phone, String email) {
         user.setUsername(username);
         user.setPhone(phone);
+        user.setEmail(email);
         return userRepository.save(user);
     }
 
