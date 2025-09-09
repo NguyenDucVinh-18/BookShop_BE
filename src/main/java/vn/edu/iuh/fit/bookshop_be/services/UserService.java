@@ -307,10 +307,11 @@ public class UserService {
         return userRepository.findByRole(role);
     }
 
-    public User updateInfoAccount(User user, String username, String phone, String email) {
+    public User updateInfoAccount(User user, String username, String phone, String email, Role role) {
         user.setUsername(username);
         user.setPhone(phone);
         user.setEmail(email);
+        user.setRole(role);
         return userRepository.save(user);
     }
 

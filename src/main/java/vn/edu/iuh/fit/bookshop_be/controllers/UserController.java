@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.ChangePasswordRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.UpdateActiveRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
@@ -472,7 +473,7 @@ public class UserController {
         try {
             User user = userService.getUserByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (user == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(404).body(response);
             }
@@ -483,13 +484,15 @@ public class UserController {
                 return ResponseEntity.status(404).body(response);
             }
 
+
             String username = request.getUsername();
             String phone = request.getPhone();
             String email = request.getEmail();
+            Role role = request.getRole();
+
 
             // kiểm tra validation
-            if (username == null || phone == null || email == null ||
-                    username.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+            if (username == null || phone == null || email == null || role == null || username.isEmpty() || phone.isEmpty() || email.isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
@@ -503,7 +506,7 @@ public class UserController {
             }
 
             // Gọi UserService để cập nhật thông tin user
-            userService.updateInfoAccount(user, username, phone, email);
+            userService.updateInfoAccount(user, username, phone, email, role);
             response.put("message", "Cập nhật thông tin tài khoản thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
@@ -562,6 +565,88 @@ public class UserController {
         }
     }
 
+    /**
+     * Lấy danh sách tất cả nhân viên và quản lý (chỉ dành cho MANAGER)
+     * @param authHeader
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @GetMapping("/employees")
+    public ResponseEntity<Map<String, Object>> getStaffAndManagers(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user.getRole() == null || (user.getRole() != Role.MANAGER)) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(403).body(response);
+            }
+            List<User> users = userService.getAllUsersByRole(Role.STAFF);
+            users.addAll(userService.getAllUsersByRole(Role.MANAGER));
+            response.put("message", "Lấy danh sách nhân viên và quản lý thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            List<User> usersRender = users.stream().map(u -> {
+                User userRender = new User();
+                userRender.setId(u.getId());
+                userRender.setUsername(u.getUsername());
+                userRender.setEmail(u.getEmail());
+                userRender.setRole(u.getRole());
+                userRender.setAvatarUrl(u.getAvatarUrl());
+                userRender.setPhone(u.getPhone());
+                userRender.setCreatedAt(u.getCreatedAt());
+                userRender.setActive(u.isActive());
+                userRender.setEnabled(u.isEnabled());
+                return userRender;
+            }).toList();
+            data.put("users", usersRender);
 
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PutMapping("/updateActiveAccount/{id}")
+    public ResponseEntity<Map<String, Object>> updateActive(
+            @RequestBody UpdateActiveRequest request,
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("id") Integer id
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (user == null || user.getRole() != Role.MANAGER) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            user = userService.findById(id);
+            if (user == null) {
+                response.put("message", "Người dùng không tồn tại");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            Boolean isActive = request.getIsActive();
+            if (isActive == null) {
+                response.put("status", "error");
+                response.put("message", "Điền đầy đủ thông tin");
+                return ResponseEntity.status(400).body(response);
+            }
+            user.setActive(isActive);
+            userService.save(user);
+            response.put("message", "Cập nhật trạng thái tài khoản thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", userService.findById(user.getId()));
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
 }
