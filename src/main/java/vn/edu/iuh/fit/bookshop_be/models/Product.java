@@ -61,7 +61,7 @@ public class Product {
 
 
     //Sách
-    @Column(name = "publisher_name", nullable = false)
+    @Column(name = "publisher_name")
     private String publisherName;
 
     @ElementCollection
@@ -81,16 +81,16 @@ public class Product {
     @Column(name = "cover_type")
     private String coverType;
 
-        //Sách giáo khoa
-        @Column(name = "grade_level")
-        private String gradeLevel;
+    //Sách giáo khoa
+    @Column(name = "grade_level")
+    private String gradeLevel;
 
-        //Truyện
-        @Column(name = "age_rating")
-        private String ageRating;
+    //Truyện
+    @Column(name = "age_rating")
+    private String ageRating;
 
-        @Column(name = "genres")
-        private String genres;
+    @Column(name = "genres")
+    private String genres;
 
 
 
