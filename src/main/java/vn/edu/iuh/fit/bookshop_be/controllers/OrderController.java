@@ -294,6 +294,12 @@ public class OrderController{
         return order.getPaymentStatus().toString();
     }
 
+    /**
+     * Hoàn tiền đơn hàng
+     * @param paymentRef
+     * @param transactionType
+     * @return trả về kết quả hoàn tiền
+     */
     @PostMapping("/refund")
     public ResponseEntity<Map<String, Object>> refundOrder(
             @RequestParam String paymentRef,
@@ -341,6 +347,34 @@ public class OrderController{
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @GetMapping("/getAllOrders")
+    public ResponseEntity<Map<String, Object>> getAllOrders(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền xem tất cả đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            List<Order> orders = orderService.findAll();
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách đơn hàng thành công");
+            response.put("data", orders);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
 
 }

@@ -30,6 +30,7 @@ public class CategoryController {
 
     /**
      * Tạo mới danh mục
+     *
      * @param authHeader
      * @param request
      * @return ResponseEntity với thông tin về danh mục mới được tạo
@@ -40,28 +41,40 @@ public class CategoryController {
             @RequestBody CategoryRequest request
     ) {
         Map<String, Object> response = new HashMap<>();
-        Category category = new Category();
-        category.setName(request.getName());
-        category.setDescription(request.getDescription());
         try {
             User user = userService.getUserByToken(authHeader);
-
-            if (user == null ) {
+            if (user == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để tạo danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (request.getName() == null || request.getName().isEmpty()) {
+            if (request.getCategoryName() == null || request.getCategoryName().trim().isEmpty()) {
                 response.put("status", "error");
-                response.put("message", "Tên danh mục không được để trống");
+                response.put("message", "Tên danh mục không được để trống hoặc chỉ chứa khoảng trắng");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            Category category = new Category();
+            category.setCategoryName(request.getCategoryName().trim());
+            category.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
+
+            if (request.getParentId() != null) {
+                Category parentCategory = categoryService.findById(request.getParentId());
+                if (parentCategory == null || parentCategory.getParentCategory() != null) {
+                    response.put("status", "error");
+                    response.put("message", "Danh mục cha không tồn tại hoặc không phải là danh mục cấp 1");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+                category.setParentCategory(parentCategory);
+            } else {
+                category.setParentCategory(null);
             }
 
             categoryService.save(category);
@@ -69,63 +82,107 @@ public class CategoryController {
             response.put("status", "success");
             response.put("message", "Tạo danh mục thành công");
             Map<String, Object> data = new HashMap<>();
-            data.put("category", category);
+            Category categoryRender = new Category();
+            categoryRender.setId(category.getId());
+            categoryRender.setCategoryName(category.getCategoryName());
+            categoryRender.setDescription(category.getDescription());
+            data.put("category", categoryRender);
             response.put("data", data);
-
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             response.put("status", "error");
-            response.put("message", "Lỗi khi cập nhật ảnh: " + e.getMessage());
+            response.put("message", "Lỗi khi tạo danh mục: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
     /**
-     * Lấy danh sách tất cả danh mục
-     * @param authHeader
-     * @return ResponseEntity với danh sách danh mục
+     * Lấy tất cả danh mục
+     *
+     * @return ResponseEntity với danh sách tất cả danh mục
      */
     @GetMapping("/getAllCategories")
-    public ResponseEntity<Map<String, Object>> getAllCategories(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> getAllCategories() {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-
-            if (user == null ) {
-                response.put("status", "error");
-                response.put("message", "Bạn cần đăng nhập để lấy danh sách danh mục");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
-                response.put("status", "error");
-                response.put("message", "Bạn không có quyền lấy danh sách danh mục");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-
-            response.put("status", "success");
-            response.put("message", "Lấy danh sách danh mục thành công");
-            Map<String, Object> data = new HashMap<>();
+            // Lấy danh sách danh mục
             List<Category> categories = categoryService.getAllCategories();
-            List<Category> categorireRender = categories.stream()
+            if (categories == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy danh sách danh mục");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Tạo danh sách phân cấp
+            List<Category> rootCategories = categories.stream()
+                    .filter(category -> category.getParentCategory() == null)
                     .map(category -> {
                         Category categoryRender = new Category();
                         categoryRender.setId(category.getId());
-                        categoryRender.setName(category.getName());
+                        categoryRender.setCategoryName(category.getCategoryName());
                         categoryRender.setDescription(category.getDescription());
+                        categoryRender.setSubCategories(categoryService.buildSubCategories(category.getSubCategories()));
                         return categoryRender;
                     }).toList();
-            data.put("categories",categorireRender);
+
+            // Tạo response
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách danh mục thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("categories", rootCategories);
             response.put("data", data);
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");
-            response.put("message", "Lỗi khi lấy danh sách danh mục: " + e.getMessage());
+            response.put("message", "Lỗi khi lấy danh sách danh mục");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    /**
+     * Lấy tất cả danh mục cha (danh mục cấp 1)
+     *
+     * @return ResponseEntity với danh sách tất cả danh mục cha
+     */
+    @GetMapping("/getParentCategories")
+    public ResponseEntity<Map<String, Object>> getParentCategories() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy danh sách danh mục cha
+            List<Category> categories = categoryService.getRootCategories();
+            if (categories == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy danh sách danh mục cha");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Tạo response
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách danh mục cha thành công");
+            Map<String, Object> data = new HashMap<>();
+            List<Category> categoryRenders = categories.stream()
+                    .map(category -> {
+                        Category categoryRender = new Category();
+                        categoryRender.setId(category.getId());
+                        categoryRender.setCategoryName(category.getCategoryName());
+                        categoryRender.setDescription(category.getDescription());
+                        return categoryRender;
+                    }).toList();
+            data.put("categories", categoryRenders);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách danh mục cha");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
 
     /**
      * Cập nhật danh mục theo ID
@@ -162,13 +219,30 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            if (request.getName() == null || request.getName().isEmpty()) {
+            if (request.getCategoryName() == null || request.getCategoryName().isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Tên danh mục không được để trống");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            category.setName(request.getName());
+            if (request.getParentId() != null) {
+                Category parentCategory = categoryService.findById(request.getParentId());
+                if (parentCategory == null) {
+                    response.put("status", "error");
+                    response.put("message", "Danh mục cha không tồn tại");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+                if (parentCategory.getId().equals(id)) {
+                    response.put("status", "error");
+                    response.put("message", "Danh mục cha không thể là chính nó");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+                category.setParentCategory(parentCategory);
+            } else {
+                category.setParentCategory(null);
+            }
+
+            category.setCategoryName(request.getCategoryName());
             category.setDescription(request.getDescription());
             categoryService.updateCategory(id,category);
 
@@ -177,7 +251,7 @@ public class CategoryController {
             Map<String, Object> data = new HashMap<>();
             Category categoryRender = new Category();
             categoryRender.setId(category.getId());
-            categoryRender.setName(category.getName());
+            categoryRender.setCategoryName(category.getCategoryName());
             categoryRender.setDescription(category.getDescription());
             data.put("category", categoryRender);
             response.put("data", data);
@@ -204,20 +278,22 @@ public class CategoryController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // Kiểm tra token và lấy thông tin người dùng
             User user = userService.getUserByToken(authHeader);
-
-            if (user == null ) {
+            if (user == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            // Kiểm tra quyền
+            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
+            // Kiểm tra tồn tại danh mục
             Category category = categoryService.getCategoryById(id);
             if (category == null) {
                 response.put("status", "error");
@@ -225,7 +301,22 @@ public class CategoryController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            categoryService.deleteCategory(id);
+            // Kiểm tra danh mục con
+            if (!category.getSubCategories().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Không thể xóa danh mục có danh mục con. Vui lòng xóa các danh mục con trước");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Thực hiện xóa
+            categoryService.deleteCategoryWithSubCategories(id);
+
+            // Xác nhận xóa (kiểm tra lại sau khi xóa)
+            if (categoryService.getCategoryById(id) != null) {
+                response.put("status", "error");
+                response.put("message", "Xóa danh mục thất bại");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
 
             response.put("status", "success");
             response.put("message", "Xóa danh mục thành công");
@@ -234,7 +325,7 @@ public class CategoryController {
 
         } catch (Exception e) {
             response.put("status", "error");
-            response.put("message", "Lỗi khi xóa danh mục: " + e.getMessage());
+            response.put("message", "Lỗi khi xóa danh mục");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

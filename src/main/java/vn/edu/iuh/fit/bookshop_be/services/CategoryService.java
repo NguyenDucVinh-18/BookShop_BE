@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
 import vn.edu.iuh.fit.bookshop_be.repositories.CategoryRepository;
@@ -19,6 +20,12 @@ public class CategoryService{
         return categoryRepository.findAll();
     }
 
+    public List<Category> getRootCategories() {
+        return categoryRepository.findAll().stream()
+                .filter(category -> category.getParentCategory() == null)
+                .toList();
+    }
+
     public Category getCategoryById(Integer id) {
         return categoryRepository.findById(id).orElse(null);
     }
@@ -35,9 +42,12 @@ public class CategoryService{
         return null; // or throw an exception
     }
 
-    public void deleteCategory(Integer id) {
-        if (categoryRepository.existsById(id)) {
-            categoryRepository.deleteById(id);
+    @Transactional
+    public void deleteCategoryWithSubCategories(Integer id) {
+        Category category = getCategoryById(id);
+        if (category != null) {
+            category.getSubCategories().forEach(sub -> deleteCategoryWithSubCategories(sub.getId()));
+            categoryRepository.delete(category); // repository là JpaRepository<Category, Integer>
         }
     }
 
@@ -50,21 +60,36 @@ public class CategoryService{
             return getAllCategories();
         }
         return categoryRepository.findAll().stream()
-                .filter(category -> category.getName().toLowerCase().contains(keyword.toLowerCase()))
+                .filter(category -> category.getCategoryName().toLowerCase().contains(keyword.toLowerCase()))
                 .toList();
     }
 
-    public List<Category> getCategoriesByProductId(Integer productId) {
-        return categoryRepository.findAll().stream()
-                .filter(category -> category.getProducts().stream()
-                        .anyMatch(product -> product.getId().equals(productId)))
-                .toList();
-    }
+//    public List<Category> getCategoriesByProductId(Integer productId) {
+//        return categoryRepository.findAll().stream()
+//                .filter(category -> category.getProducts().stream()
+//                        .anyMatch(product -> product.getId().equals(productId)))
+//                .toList();
+//    }
 
     public List<Category> getCategoriesByName(String name) {
         return categoryRepository.findAll().stream()
-                .filter(category -> category.getName().equalsIgnoreCase(name))
+                .filter(category -> category.getCategoryName().equalsIgnoreCase(name))
                 .toList();
+    }
+
+    public  List<Category> buildSubCategories(List<Category> subCategories) {
+        if (subCategories == null || subCategories.isEmpty()) {
+            return null;
+        }
+        return subCategories.stream()
+                .map(subCategory -> {
+                    Category categoryRender = new Category();
+                    categoryRender.setId(subCategory.getId());
+                    categoryRender.setCategoryName(subCategory.getCategoryName());
+                    categoryRender.setDescription(subCategory.getDescription());
+                    categoryRender.setSubCategories(buildSubCategories(subCategory.getSubCategories()));
+                    return categoryRender;
+                }).toList();
     }
 
 }

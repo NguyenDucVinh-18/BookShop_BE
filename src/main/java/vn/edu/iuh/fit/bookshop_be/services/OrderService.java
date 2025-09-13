@@ -116,4 +116,8 @@ public class OrderService {
     public Order findByPaymentRef(String paymentRef){
         return orderRepository.findByPaymentRef(paymentRef);
     }
+
+    public List<Order> findAll() {
+        return orderRepository.findAll();
+    }
 }
