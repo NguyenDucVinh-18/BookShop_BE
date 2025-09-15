@@ -14,98 +14,156 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Kiểm tra xem bảng categories đã có dữ liệu chưa
         if (categoryRepository.count() == 0) {
-            // Danh mục cấp 1
-            Category sachTrongNuoc = new Category("Sách Trong Nước", "Danh mục sách trong nước");
-            Category foreignBooks = new Category("FOREIGN BOOKS", "Danh mục sách ngoại văn");
-            Category vpp = new Category("VPP - Dụng Cụ Học Sinh", "Danh mục dụng cụ học sinh");
-            Category doChoi = new Category("Đồ Chơi", "Danh mục đồ chơi");
-            Category lamDep = new Category("Làm Đẹp - Sức Khỏe", "Danh mục làm đẹp và sức khỏe");
-            Category sachGiaoKhoa = new Category("Sách Giáo Khoa 2025", "Danh mục sách giáo khoa năm 2025");
-            Category vppDchs = new Category("VPP - DCHS Theo Thống Hiệu", "Danh mục dụng cụ học sinh theo thống hiệu");
-            Category doChoiTheoThongHieu = new Category("Đồ Chơi Theo Thống Hiệu", "Danh mục đồ chơi theo thống hiệu");
-            Category bachHoaOnline = new Category("Bách Hóa Online - Lưu Niệm", "Danh mục bách hóa online và lưu niệm");
+            // ==== DANH MỤC CHA ====
+            Category vanHoc = new Category("VĂN HỌC", "Danh mục văn học");
+            Category kinhTe = new Category("KINH TẾ", "Danh mục kinh tế");
+            Category tamLyKyNangSong = new Category("TÂM LÝ - KỸ NĂNG SỐNG", "Danh mục tâm lý - kỹ năng sống");
+            Category nuoiDayCon = new Category("NUÔI DẠY CON", "Danh mục nuôi dạy con");
+            Category sachThieuNhi = new Category("SÁCH THIẾU NHI", "Danh mục sách thiếu nhi");
+            Category tieuSuHoiKy = new Category("TIỂU SỬ - HỒI KÝ", "Danh mục tiểu sử - hồi ký");
+            Category giaoKhoa = new Category("GIÁO KHOA - THAM KHẢO", "Danh mục giáo khoa - tham khảo");
+            Category sachNgoaiNgu = new Category("SÁCH HỌC NGOẠI NGỮ", "Danh mục sách học ngoại ngữ");
 
-            // Danh mục con của Sách Trong Nước
-            Category vanHoc = new Category("VĂN HỌC", "Sách văn học");
-            Category kinhTe = new Category("KINH TẾ", "Sách kinh tế");
-            Category tamLyKiNangSong = new Category("TÂM LÝ - KỸ NĂNG SỐNG", "Sách tâm lý và kỹ năng sống");
-            Category nuoiDayCon = new Category("NUÔI DẠY CON", "Sách nuôi dạy con");
-            Category sachThieuNhi = new Category("SÁCH THIẾU NHI", "Sách thiếu nhi");
-            Category tiepSuHoiKy = new Category("TIẾU SỬ - HỒI KÝ", "Sách tiểu sử và hồi ký");
-            Category giaoKhoaThamKhao = new Category("GIÁO KHOA - THAM KHẢO", "Sách giáo khoa và tham khảo");
-            Category sachHocNgoaiNgu = new Category("SÁCH HỌC NGOẠI NGỮ", "Sách học ngoại ngữ");
-            Category sachMoi = new Category("SÁCH MỚI", "Sách mới");
-            Category sachBanChay = new Category("SÁCH BÁN CHẠY", "Sách bán chạy");
+            // ==== DANH MỤC CON ====
+            // Văn Học
+            Category tieuThuyet = new Category("Tiểu Thuyết", "Sách tiểu thuyết");
+            Category truyenNgan = new Category("Truyện Ngắn - Tản Văn", "Sách truyện ngắn - tản văn");
+            Category lightNovel = new Category("Light Novel", "Sách light novel");
+            Category ngonTinh = new Category("Ngôn Tình", "Sách ngôn tình");
 
-            // Danh mục con của VPP - Dụng Cụ Học Sinh
-            Category butViet = new Category("BÚT - VIẾT", "Danh mục bút và dụng cụ viết");
-            Category dungCuHocSinh = new Category("DỤNG CỤ HỌC SINH", "Danh mục dụng cụ học sinh");
-            Category dungCuVanPhong = new Category("DỤNG CỤ VĂN PHÒNG", "Danh mục dụng cụ văn phòng");
-            Category dungCuVe = new Category("DỤNG CỤ VẼ", "Danh mục dụng cụ vẽ");
-            Category sanPhamVeGiai = new Category("SẢN PHẨM VẼ GIẢI", "Danh mục sản phẩm vẽ giải");
-            Category sanPhamKhac = new Category("SẢN PHẨM KHÁC", "Danh mục sản phẩm khác");
-            Category sanPhamDienTu = new Category("SẢN PHẨM ĐIỆN TỬ", "Danh mục sản phẩm điện tử");
-            Category sanPhamMoi = new Category("SẢN PHẨM MỚI", "Danh mục sản phẩm mới");
-            Category sanPhamBanChay = new Category("SẢN PHẨM BÁN CHẠY", "Danh mục sản phẩm bán chạy");
+            // Kinh Tế
+            Category nhanVat = new Category("Nhân Vật - Bài Học Kinh Doanh", "Sách kinh doanh và nhân vật");
+            Category quanTri = new Category("Quản Trị - Lãnh Đạo", "Sách quản trị lãnh đạo");
+            Category marketing = new Category("Marketing - Bán Hàng", "Sách marketing - bán hàng");
+            Category phanTich = new Category("Phân Tích Kinh Tế", "Sách phân tích kinh tế");
 
-            // Liên kết danh mục con với Sách Trong Nước
-            sachTrongNuoc.getSubCategories().add(vanHoc);
-            sachTrongNuoc.getSubCategories().add(kinhTe);
-            sachTrongNuoc.getSubCategories().add(tamLyKiNangSong);
-            sachTrongNuoc.getSubCategories().add(nuoiDayCon);
-            sachTrongNuoc.getSubCategories().add(sachThieuNhi);
-            sachTrongNuoc.getSubCategories().add(tiepSuHoiKy);
-            sachTrongNuoc.getSubCategories().add(giaoKhoaThamKhao);
-            sachTrongNuoc.getSubCategories().add(sachHocNgoaiNgu);
-            sachTrongNuoc.getSubCategories().add(sachMoi);
-            sachTrongNuoc.getSubCategories().add(sachBanChay);
+            // Tâm Lý - Kỹ Năng Sống
+            Category kyNangSong = new Category("Kỹ Năng Sống", "Sách kỹ năng sống");
+            Category renLuyenNhanCach = new Category("Rèn Luyện Nhân Cách", "Sách rèn luyện nhân cách");
+            Category tamLy = new Category("Tâm Lý", "Sách tâm lý");
+            Category sachTuoiMoiLon = new Category("Sách Cho Tuổi Mới Lớn", "Sách dành cho tuổi mới lớn");
 
-            // Đặt parentCategory cho các danh mục con của Sách Trong Nước
-            vanHoc.setParentCategory(sachTrongNuoc);
-            kinhTe.setParentCategory(sachTrongNuoc);
-            tamLyKiNangSong.setParentCategory(sachTrongNuoc);
-            nuoiDayCon.setParentCategory(sachTrongNuoc);
-            sachThieuNhi.setParentCategory(sachTrongNuoc);
-            tiepSuHoiKy.setParentCategory(sachTrongNuoc);
-            giaoKhoaThamKhao.setParentCategory(sachTrongNuoc);
-            sachHocNgoaiNgu.setParentCategory(sachTrongNuoc);
-            sachMoi.setParentCategory(sachTrongNuoc);
-            sachBanChay.setParentCategory(sachTrongNuoc);
+            // Nuôi Dạy Con
+            Category camNangChaMe = new Category("Cẩm Nang Làm Cha Mẹ", "Sách cẩm nang cho cha mẹ");
+            Category phuongPhapGd = new Category("Phương Pháp Giáo Dục Trẻ", "Phương pháp giáo dục trẻ");
+            Category phatTrienTriTue = new Category("Phát Triển Trí Tuệ Cho Trẻ", "Sách phát triển trí tuệ cho trẻ");
+            Category kyNangTre = new Category("Phát Triển Kỹ Năng Cho Trẻ", "Sách phát triển kỹ năng cho trẻ");
 
-            // Liên kết danh mục con với VPP - Dụng Cụ Học Sinh
-            vpp.getSubCategories().add(butViet);
-            vpp.getSubCategories().add(dungCuHocSinh);
-            vpp.getSubCategories().add(dungCuVanPhong);
-            vpp.getSubCategories().add(dungCuVe);
-            vpp.getSubCategories().add(sanPhamVeGiai);
-            vpp.getSubCategories().add(sanPhamKhac);
-            vpp.getSubCategories().add(sanPhamDienTu);
-            vpp.getSubCategories().add(sanPhamMoi);
-            vpp.getSubCategories().add(sanPhamBanChay);
+            // Sách Thiếu Nhi
+            Category manga = new Category("Manga - Comic", "Sách truyện tranh, comic");
+            Category kienThucBachKhoa = new Category("Kiến Thức Bách Khoa", "Sách kiến thức bách khoa");
+            Category sachTranh = new Category("Sách Tranh Kỹ Năng Sống", "Sách tranh kỹ năng sống");
+            Category vuaHocVuaChoi = new Category("Vừa Học - Vừa Chơi", "Sách thiếu nhi vừa học vừa chơi");
 
-            // Đặt parentCategory cho các danh mục con của VPP - Dụng Cụ Học Sinh
-            butViet.setParentCategory(vpp);
-            dungCuHocSinh.setParentCategory(vpp);
-            dungCuVanPhong.setParentCategory(vpp);
-            dungCuVe.setParentCategory(vpp);
-            sanPhamVeGiai.setParentCategory(vpp);
-            sanPhamKhac.setParentCategory(vpp);
-            sanPhamDienTu.setParentCategory(vpp);
-            sanPhamMoi.setParentCategory(vpp);
-            sanPhamBanChay.setParentCategory(vpp);
+            // Tiểu Sử - Hồi Ký
+            Category cauChuyen = new Category("Câu Chuyện Cuộc Đời", "Sách kể chuyện cuộc đời");
+            Category chinhTri = new Category("Chính Trị", "Sách chính trị");
+            Category kinhTeHoiKy = new Category("Kinh Tế", "Sách kinh tế hồi ký");
+            Category ngheThuat = new Category("Nghệ Thuật - Giải Trí", "Sách nghệ thuật - giải trí");
 
-            // Lưu tất cả danh mục vào cơ sở dữ liệu
-            categoryRepository.save(sachTrongNuoc);
-            categoryRepository.save(foreignBooks);
-            categoryRepository.save(vpp);
-            categoryRepository.save(doChoi);
-            categoryRepository.save(lamDep);
-            categoryRepository.save(sachGiaoKhoa);
-            categoryRepository.save(vppDchs);
-            categoryRepository.save(doChoiTheoThongHieu);
-            categoryRepository.save(bachHoaOnline);
+            // Giáo Khoa - Tham Khảo
+            Category sachGiaoKhoa = new Category("Sách Giáo Khoa", "Sách giáo khoa");
+            Category sachThamKhao = new Category("Sách Tham Khảo", "Sách tham khảo");
+            Category luyenThi = new Category("Luyện Thi THPT Quốc Gia", "Sách luyện thi THPT quốc gia");
+            Category mauGiao = new Category("Mẫu Giáo", "Sách mẫu giáo");
+
+            // Sách Học Ngoại Ngữ
+            Category tiengAnh = new Category("Tiếng Anh", "Sách học tiếng Anh");
+            Category tiengNhat = new Category("Tiếng Nhật", "Sách học tiếng Nhật");
+            Category tiengHoa = new Category("Tiếng Hoa", "Sách học tiếng Hoa");
+            Category tiengHan = new Category("Tiếng Hàn", "Sách học tiếng Hàn");
+
+            // ==== LIÊN KẾT CHA - CON ====
+            // Văn Học
+            vanHoc.getSubCategories().add(tieuThuyet);
+            vanHoc.getSubCategories().add(truyenNgan);
+            vanHoc.getSubCategories().add(lightNovel);
+            vanHoc.getSubCategories().add(ngonTinh);
+            tieuThuyet.setParentCategory(vanHoc);
+            truyenNgan.setParentCategory(vanHoc);
+            lightNovel.setParentCategory(vanHoc);
+            ngonTinh.setParentCategory(vanHoc);
+
+            // Kinh Tế
+            kinhTe.getSubCategories().add(nhanVat);
+            kinhTe.getSubCategories().add(quanTri);
+            kinhTe.getSubCategories().add(marketing);
+            kinhTe.getSubCategories().add(phanTich);
+            nhanVat.setParentCategory(kinhTe);
+            quanTri.setParentCategory(kinhTe);
+            marketing.setParentCategory(kinhTe);
+            phanTich.setParentCategory(kinhTe);
+
+            // Tâm Lý - Kỹ Năng Sống
+            tamLyKyNangSong.getSubCategories().add(kyNangSong);
+            tamLyKyNangSong.getSubCategories().add(renLuyenNhanCach);
+            tamLyKyNangSong.getSubCategories().add(tamLy);
+            tamLyKyNangSong.getSubCategories().add(sachTuoiMoiLon);
+            kyNangSong.setParentCategory(tamLyKyNangSong);
+            renLuyenNhanCach.setParentCategory(tamLyKyNangSong);
+            tamLy.setParentCategory(tamLyKyNangSong);
+            sachTuoiMoiLon.setParentCategory(tamLyKyNangSong);
+
+            // Nuôi Dạy Con
+            nuoiDayCon.getSubCategories().add(camNangChaMe);
+            nuoiDayCon.getSubCategories().add(phuongPhapGd);
+            nuoiDayCon.getSubCategories().add(phatTrienTriTue);
+            nuoiDayCon.getSubCategories().add(kyNangTre);
+            camNangChaMe.setParentCategory(nuoiDayCon);
+            phuongPhapGd.setParentCategory(nuoiDayCon);
+            phatTrienTriTue.setParentCategory(nuoiDayCon);
+            kyNangTre.setParentCategory(nuoiDayCon);
+
+            // Sách Thiếu Nhi
+            sachThieuNhi.getSubCategories().add(manga);
+            sachThieuNhi.getSubCategories().add(kienThucBachKhoa);
+            sachThieuNhi.getSubCategories().add(sachTranh);
+            sachThieuNhi.getSubCategories().add(vuaHocVuaChoi);
+            manga.setParentCategory(sachThieuNhi);
+            kienThucBachKhoa.setParentCategory(sachThieuNhi);
+            sachTranh.setParentCategory(sachThieuNhi);
+            vuaHocVuaChoi.setParentCategory(sachThieuNhi);
+
+            // Tiểu Sử - Hồi Ký
+            tieuSuHoiKy.getSubCategories().add(cauChuyen);
+            tieuSuHoiKy.getSubCategories().add(chinhTri);
+            tieuSuHoiKy.getSubCategories().add(kinhTeHoiKy);
+            tieuSuHoiKy.getSubCategories().add(ngheThuat);
+            cauChuyen.setParentCategory(tieuSuHoiKy);
+            chinhTri.setParentCategory(tieuSuHoiKy);
+            kinhTeHoiKy.setParentCategory(tieuSuHoiKy);
+            ngheThuat.setParentCategory(tieuSuHoiKy);
+
+            // Giáo Khoa - Tham Khảo
+            giaoKhoa.getSubCategories().add(sachGiaoKhoa);
+            giaoKhoa.getSubCategories().add(sachThamKhao);
+            giaoKhoa.getSubCategories().add(luyenThi);
+            giaoKhoa.getSubCategories().add(mauGiao);
+            sachGiaoKhoa.setParentCategory(giaoKhoa);
+            sachThamKhao.setParentCategory(giaoKhoa);
+            luyenThi.setParentCategory(giaoKhoa);
+            mauGiao.setParentCategory(giaoKhoa);
+
+            // Sách Học Ngoại Ngữ
+            sachNgoaiNgu.getSubCategories().add(tiengAnh);
+            sachNgoaiNgu.getSubCategories().add(tiengNhat);
+            sachNgoaiNgu.getSubCategories().add(tiengHoa);
+            sachNgoaiNgu.getSubCategories().add(tiengHan);
+            tiengAnh.setParentCategory(sachNgoaiNgu);
+            tiengNhat.setParentCategory(sachNgoaiNgu);
+            tiengHoa.setParentCategory(sachNgoaiNgu);
+            tiengHan.setParentCategory(sachNgoaiNgu);
+
+            // ==== LƯU DATABASE ====
+            categoryRepository.save(vanHoc);
+            categoryRepository.save(kinhTe);
+            categoryRepository.save(tamLyKyNangSong);
+            categoryRepository.save(nuoiDayCon);
+            categoryRepository.save(sachThieuNhi);
+            categoryRepository.save(tieuSuHoiKy);
+            categoryRepository.save(giaoKhoa);
+            categoryRepository.save(sachNgoaiNgu);
         }
     }
 }

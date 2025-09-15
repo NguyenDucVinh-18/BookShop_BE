@@ -6,13 +6,16 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.AddProductToCartReqest;
 import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Cart;
+import vn.edu.iuh.fit.bookshop_be.models.CartItem;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
 import vn.edu.iuh.fit.bookshop_be.models.User;
 import vn.edu.iuh.fit.bookshop_be.services.CartService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductService;
 import vn.edu.iuh.fit.bookshop_be.services.UserService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -166,7 +169,19 @@ public class CartController {
             data.put("createdAt", cart.getCreatedAt());
             data.put("updatedAt", cart.getUpdatedAt());
             data.put("userId", cart.getUser().getId());
-            data.put("items", cart.getItems());
+            // build danh sách item thủ công
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (CartItem cartItem : cart.getItems()) {
+                Map<String, Object> itemData = new HashMap<>();
+                itemData.put("id", cartItem.getId());
+                itemData.put("productId", cartItem.getProduct().getId());
+                itemData.put("productName", cartItem.getProduct().getProductName());
+                itemData.put("productImage", cartItem.getProduct().getImageUrls());
+                itemData.put("quantity", cartItem.getQuantity());
+                itemData.put("price", cartItem.getPrice());
+                items.add(itemData);
+            }
+            data.put("items", items);
             response.put("data", data);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

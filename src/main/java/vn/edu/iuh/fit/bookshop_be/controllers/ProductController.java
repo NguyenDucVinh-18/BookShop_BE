@@ -146,26 +146,14 @@ public class ProductController {
 
     /**
      * Lấy danh sách tất cả sản phẩm
-     * @param authHeader
      * @return ResponseEntity với danh sách sản phẩm hoặc lỗi nếu có
      */
     @GetMapping("/getAllProducts")
-    public ResponseEntity<Map<String, Object>> createCategory(
-            @RequestHeader("Authorization") String authHeader
+    public ResponseEntity<Map<String, Object>> getAllProduct(
     ) {
         Map<String, Object> response = new HashMap<>();
         try{
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
-                response.put("status", "error");
-                response.put("message", "Bạn cần đăng nhập để xem danh sách sản phẩm");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
-                response.put("status", "error");
-                response.put("message", "Bạn không có quyền xem danh sách sản phẩm");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
+
             List<Product> products = productService.getAllProducts();
             if (products.isEmpty()) {
                 response.put("status", "success");
