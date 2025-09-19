@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
 import vn.edu.iuh.fit.bookshop_be.dtos.PlaceOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.services.*;
@@ -246,37 +247,50 @@ public class OrderController{
         }
     }
 
+    /**
+     * Xử lý thanh toán qua VNPAY
+     * @param totalPrice
+     * @return trả về URL thanh toán của VNPAY
+     * @throws UnsupportedEncodingException
+     */
     @PostMapping("/vnpay_payment")
-    public String handlePlaceOrder(
-//            @RequestHeader("Authorization") String authHeader,
-//            @RequestParam("receiverName") String receiverName,
-//            @RequestParam("receiverAddress") String receiverAddress,
-//            @RequestParam("receiverPhone") String receiverPhone,
-//            @RequestParam("paymentMethod") String paymentMethod,
-            @RequestParam("totalPrice") String totalPrice) throws UnsupportedEncodingException {
-//        User user = userService.getUserByToken(authHeader);
-
+    public String handlePlaceOrder(@RequestParam("totalPrice") String totalPrice) throws UnsupportedEncodingException {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
-
-//        this.productService.handlePlaceOrder(currentUser, session,
-//                receiverName, receiverAddress, receiverPhone,
-//                paymentMethod, uuid);
-
-//        if (!paymentMethod.equals("COD")) {
-            String vnpUrl = this.vNPayService.generateVNPayURL(Double.parseDouble(totalPrice), uuid);
-
-            return vnpUrl;
-//        }
-
-//        return "redirect:/thanks";
-
+        String vnpUrl = this.vNPayService.generateVNPayURL(Double.parseDouble(totalPrice), uuid);
+        return vnpUrl;
     }
 
+    @PostMapping("/repayment/{orderId}")
+    public String handleRepayment(
+            @PathVariable Integer orderId) throws UnsupportedEncodingException {
+        Order order = orderService.findById(orderId);
+        if (order == null) {
+            throw new RuntimeException("Order not found with ID: " + orderId);
+        }
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Order has already been paid");
+        }
+        final String uuid = UUID.randomUUID().toString().replace("-", "");
+        order.setPaymentRef(uuid);
+        orderService.save(order);
+        String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
+        return vnpUrl;
+    }
+
+
+
+    /**
+     * Trang cảm ơn sau khi thanh toán
+     * @param vnpayResponseCode
+     * @param paymentRef
+     * @return chuyển hướng đến trang kết quả đơn hàng
+     */
     @GetMapping("/thanks")
-    public String getThankYouPage(
+    public RedirectView getThankYouPage(
             @RequestParam("vnp_ResponseCode") Optional<String> vnpayResponseCode,
             @RequestParam("vnp_TxnRef") Optional<String> paymentRef) {
         Order order = orderService.findByPaymentRef(paymentRef.orElse(""));
+        String redirectUrl;
         if (order == null) {
             return null;
         }
@@ -285,13 +299,20 @@ public class OrderController{
             if(vnpayResponseCode.get().equals("00")) {
                 order.setPaymentStatus(PaymentStatus.PAID);
                 order.setStatus(OrderStatus.PENDING);
+                orderService.save(order);
+                redirectUrl = "http://localhost:5173/order-result?status=success&orderId=" + order.getId();
+                return new RedirectView(redirectUrl);
             } else {
                 order.setPaymentStatus(PaymentStatus.FAILED);
+                orderService.save(order);
+                redirectUrl = "http://localhost:5173/order-result?status=fail&orderId=" + order.getId();
+                return new RedirectView(redirectUrl);
             }
-            orderService.save(order);
+
         }
 
-        return order.getPaymentStatus().toString();
+        redirectUrl = "http://localhost:5173/order-result?status=fail&orderId=" + order.getId();
+        return new RedirectView(redirectUrl);
     }
 
     /**
@@ -348,6 +369,11 @@ public class OrderController{
         }
     }
 
+    /**
+     * Lấy tất cả đơn hàng (dành cho nhân viên và quản lý)
+     * @param authHeader
+     * @return trả về danh sách tất cả đơn hàng
+     */
     @GetMapping("/getAllOrders")
     public ResponseEntity<Map<String, Object>> getAllOrders(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
@@ -375,6 +401,52 @@ public class OrderController{
         }
     }
 
+    /**
+     * Lấy thông tin đơn hàng theo ID
+     * @param authHeader
+     * @param orderId
+     * @return trả về thông tin đơn hàng
+     */
+    @GetMapping("/{orderId}")
+    public ResponseEntity<Map<String, Object>> getOrderById(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer orderId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            User user = userService.getUserByToken(authHeader);
+            if (user == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
 
+            Order order = null;
+
+            if(user.getRole() == Role.STAFF || user.getRole() == Role.MANAGER) {
+                order = orderService.findById(orderId);
+                if (order == null) {
+                    response.put("status", "error");
+                    response.put("message", "Đơn hàng không tồn tại");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+            } else{
+                order = orderService.findByIdAndUser(orderId, user);
+                if (order == null) {
+                    response.put("status", "error");
+                    response.put("message", "Nguoời dùng không có đơn hàng này hoặc đơn hàng không tồn tại");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                }
+            }
+
+            response.put("status", "success");
+            response.put("message", "Lấy thông tin đơn hàng thành công");
+            response.put("data", order);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy thông tin đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
 }

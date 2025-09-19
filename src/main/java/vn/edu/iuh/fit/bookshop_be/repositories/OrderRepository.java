@@ -15,4 +15,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("select o from Order o where o.paymentRef = ?1")
     Order findByPaymentRef(String paymentRef);
+
+    @Query("select o from Order o where o.id = ?1 and o.user = ?2")
+    Order findByIdAndUser(Integer id, User user);
+
+
 }

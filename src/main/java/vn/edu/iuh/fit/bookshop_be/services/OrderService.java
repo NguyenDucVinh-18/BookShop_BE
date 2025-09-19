@@ -120,4 +120,8 @@ public class OrderService {
     public List<Order> findAll() {
         return orderRepository.findAll();
     }
+
+    public Order findByIdAndUser(Integer id, User user) {
+        return orderRepository.findByIdAndUser(id, user);
+    }
 }
