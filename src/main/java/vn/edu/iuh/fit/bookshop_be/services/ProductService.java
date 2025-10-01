@@ -58,6 +58,18 @@ public class ProductService {
         return null; // or throw an exception
     }
 
+//    public List<Product> findByCategoryName(String keyword) {
+//        return productRepository.findByCategory_CategoryName(keyword);
+//    }
+
+    public List<Product> findByParentCategoryId(Integer id) {
+        return productRepository.findByCategory_ParentCategory_Id(id);
+    }
+
+    public List<Product> findByCategoryName(String parentName, String categoryName) {
+        return productRepository.findByCategory_ParentCategory_CategoryNameAndCategory_CategoryName(parentName, categoryName);
+    }
+
 
 
 

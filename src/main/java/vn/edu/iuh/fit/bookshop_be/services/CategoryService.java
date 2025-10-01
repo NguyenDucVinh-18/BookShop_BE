@@ -92,4 +92,18 @@ public class CategoryService{
                 }).toList();
     }
 
+    public List<Category> getCategoriesByParentSlug(String slug) {
+        return categoryRepository.findByParentCategory_Slug(slug);
+    }
+
+    public Category getCategoryBySlug(String slug) {
+        return categoryRepository.findBySlug(slug);
+    }
+
+    public List<Category> getSubCategories() {
+        return categoryRepository.findAll().stream()
+                .filter(category -> category.getParentCategory() != null)
+                .toList();
+    }
+
 }

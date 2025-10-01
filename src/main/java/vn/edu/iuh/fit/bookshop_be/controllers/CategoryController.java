@@ -330,5 +330,109 @@ public class CategoryController {
         }
     }
 
+    @GetMapping("/getCategoryByPatentSlug/{parentSlug}")
+    public ResponseEntity<Map<String, Object>> getCategoryByPatentSlug(@PathVariable("parentSlug") String parentSlug) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy danh sách danh mục cha
+            List<Category> categories = categoryService.getCategoriesByParentSlug(parentSlug);
+            if (categories == null || categories.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy danh mục với slug: " + parentSlug);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Tạo response
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách danh mục thành công");
+            Map<String, Object> data = new HashMap<>();
+            List<Category> categoryRenders = categories.stream()
+                    .map(category -> {
+                        Category categoryRender = new Category();
+                        categoryRender.setId(category.getId());
+                        categoryRender.setCategoryName(category.getCategoryName());
+                        categoryRender.setDescription(category.getDescription());
+                        return categoryRender;
+                    }).toList();
+            data.put("categories", categoryRenders);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách danh mục");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/getCategoryBySlug/{slug}")
+    public ResponseEntity<Map<String, Object>> getCategoryBySlug(@PathVariable("slug") String slug) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy danh sách danh mục cha
+            Category category = categoryService.getCategoryBySlug(slug);
+            if (category == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy danh mục với slug: " + slug);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Tạo response
+            response.put("status", "success");
+            response.put("message", "Lấy danh mục thành công");
+            Map<String, Object> data = new HashMap<>();
+            Category categoryRender = new Category();
+            categoryRender.setId(category.getId());
+            categoryRender.setCategoryName(category.getCategoryName());
+            categoryRender.setDescription(category.getDescription());
+            data.put("category", categoryRender);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh mục");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/getSubCategories")
+    public ResponseEntity<Map<String, Object>> getSubCategories() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Lấy danh sách danh mục cha
+            List<Category> categories = categoryService.getSubCategories();
+            if (categories == null || categories.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy danh mục con");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // Tạo response
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách danh mục con thành công");
+            Map<String, Object> data = new HashMap<>();
+            List<Category> categoryRenders = categories.stream()
+                    .map(category -> {
+                        Category categoryRender = new Category();
+                        categoryRender.setId(category.getId());
+                        categoryRender.setCategoryName(category.getCategoryName());
+                        categoryRender.setDescription(category.getDescription());
+                        categoryRender.setParentCategory(category.getParentCategory() != null ? new Category() {{
+                            setId(category.getParentCategory().getId());
+                        }} : null);
+                        return categoryRender;
+                    }).toList();
+            data.put("categories", categoryRenders);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách danh mục con");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
 }

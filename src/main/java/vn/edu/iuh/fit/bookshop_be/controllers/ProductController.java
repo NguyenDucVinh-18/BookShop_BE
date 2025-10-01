@@ -578,7 +578,219 @@ public class ProductController {
         }
     }
 
+//    @GetMapping("/getByCategoryName")
+//    public ResponseEntity<Map<String, Object>> getProductsByCategoryName(
+//            @RequestParam Map<> categoryName
+//    ) {
+//        Map<String, Object> response = new HashMap<>();
+//        try {
+//            List<Product> products = productService.findByCategoryName(categoryName.trim());
+//            if (products.isEmpty()) {
+//                response.put("status", "success");
+//                response.put("message", "Không có sản phẩm nào trong danh mục này");
+//                response.put("data", Collections.emptyList());
+//                return ResponseEntity.ok(response);
+//            }
+//
+//            response.put("status", "success");
+//            response.put("message", "Lấy danh sách sản phẩm theo danh mục thành công");
+//
+//            List<Map<String, Object>> productList = new ArrayList<>();
+//            for (Product product : products) {
+//                Map<String, Object> productData = new HashMap<>();
+//                productData.put("id", product.getId());
+//                productData.put("productName", product.getProductName());
+//                productData.put("description", product.getDescription());
+//                productData.put("price", product.getPrice());
+//                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("packageDimensions", product.getPackageDimensions());
+//                productData.put("weightGrams", product.getWeightGrams());
+//                productData.put("productType", product.getProductType());
+//                productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
+//                productData.put("publisherName", product.getPublisherName());
+//                productData.put("authorNames", product.getAuthorNames());
+//                productData.put("publicationYear", product.getPublicationYear());
+//                productData.put("pageCount", product.getPageCount());
+//                productData.put("isbn", product.getIsbn());
+//                productData.put("coverType", product.getCoverType());
+//                productData.put("gradeLevel", product.getGradeLevel());
+//                productData.put("ageRating", product.getAgeRating());
+//                productData.put("genres", product.getGenres());
+//                productData.put("imageUrls", new ArrayList<>(product.getImageUrls()));
+//                productList.add(productData);
+//            }
+//
+//            Map<String, Object> data = new HashMap<>();
+//            data.put("products", productList);
+//            response.put("data", data);
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//            response.put("status", "error");
+//            response.put("message", "Lỗi khi lấy danh sách sản phẩm theo danh mục: " + e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+//    }
 
+    @GetMapping("/getByParentCategoryId/{id}")
+    public ResponseEntity<Map<String, Object>> getProductsByParentCategoryId(
+            @PathVariable Integer id
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Product> products = productService.findByParentCategoryId(id);
+            if (products.isEmpty()) {
+                response.put("status", "success");
+                response.put("message", "Không có sản phẩm nào trong danh mục này");
+                response.put("data", Collections.emptyList());
+                return ResponseEntity.ok(response);
+            }
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách sản phẩm theo danh mục thành công");
+            List<Map<String, Object>> productList = new ArrayList<>();
+            for (Product product : products) {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("id", product.getId());
+                productData.put("productName", product.getProductName());
+                productData.put("description", product.getDescription());
+                productData.put("price", product.getPrice());
+                productData.put("stockQuantity", product.getStockQuantity());
+                productData.put("packageDimensions", product.getPackageDimensions());
+                productData.put("weightGrams", product.getWeightGrams());
+                productData.put("productType", product.getProductType());
+                productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
+                productData.put("publisherName", product.getPublisherName());
+                productData.put("authorNames", product.getAuthorNames());
+                productData.put("publicationYear", product.getPublicationYear());
+                productData.put("pageCount", product.getPageCount());
+                productData.put("isbn", product.getIsbn());
+                productData.put("coverType", product.getCoverType());
+                productData.put("gradeLevel", product.getGradeLevel());
+                productData.put("ageRating", product.getAgeRating());
+                productData.put("genres", product.getGenres());
+                // Chuyển đổi danh sách ảnh thành danh sách URL
+                List<String> imageUrls = new ArrayList<>(product.getImageUrls());
+                productData.put("imageUrls", imageUrls);
+                // Thêm vào danh sách sản phẩm
+                productList.add(productData);
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("products", productList);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách sản phẩm theo danh mục: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
+//    @GetMapping("/getByCategoryId/{id}")
+//    public ResponseEntity<Map<String, Object>> getProductsByCategoryId(
+//            @PathVariable Integer id
+//    ) {
+//        Map<String, Object> response = new HashMap<>();
+//        try {
+//            List<Product> products = productService.findByCategoryId(id);
+//            if (products.isEmpty()) {
+//                response.put("status", "success");
+//                response.put("message", "Không có sản phẩm nào trong danh mục này");
+//                response.put("data", Collections.emptyList());
+//                return ResponseEntity.ok(response);
+//            }
+//            response.put("status", "success");
+//            response.put("message", "Lấy danh sách sản phẩm theo danh mục thành công");
+//            List<Map<String, Object>> productList = new ArrayList<>();
+//            for (Product product : products) {
+//                Map<String, Object> productData = new HashMap<>();
+//                productData.put("id", product.getId());
+//                productData.put("productName", product.getProductName());
+//                productData.put("description", product.getDescription());
+//                productData.put("price", product.getPrice());
+//                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("packageDimensions", product.getPackageDimensions());
+//                productData.put("weightGrams", product.getWeightGrams());
+//                productData.put("productType", product.getProductType());
+//                productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
+//                productData.put("publisherName", product.getPublisherName());
+//                productData.put("authorNames", product.getAuthorNames());
+//                productData.put("publicationYear", product.getPublicationYear());
+//                productData.put("pageCount", product.getPageCount());
+//                productData.put("isbn", product.getIsbn());
+//                productData.put("coverType", product.getCoverType());
+//                productData.put("gradeLevel", product.getGradeLevel());
+//                productData.put("ageRating", product.getAgeRating());
+//                productData.put("genres", product.getGenres());
+//                // Chuyển đổi danh sách ảnh thành danh sách URL
+//                List<String> imageUrls = new ArrayList<>(product.getImageUrls());
+//                productData.put("imageUrls", imageUrls);
+//                // Thêm vào danh sách sản phẩm
+//                productList.add(productData);
+//            }
+//            Map<String, Object> data = new HashMap<>();
+//            data.put("products", productList);
+//            response.put("data", data);
+//            return ResponseEntity.ok(response);
+//        } catch (Exception e) {
+//            response.put("status", "error");
+//            response.put("message", "Lỗi khi lấy danh sách sản phẩm theo danh mục: " + e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+//    }
+
+    @GetMapping("/{categoryParentName}/{categoryName}")
+    public ResponseEntity<Map<String, Object>> getProductsByCategoryName(
+            @PathVariable String categoryParentName,
+            @PathVariable String categoryName
+
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Product> products = productService.findByCategoryName(categoryParentName,categoryName);
+            if (products.isEmpty()) {
+                response.put("status", "success");
+                response.put("message", "Không có sản phẩm nào trong danh mục này");
+                response.put("data", Collections.emptyList());
+                return ResponseEntity.ok(response);
+            }
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách sản phẩm theo danh mục thành công");
+            List<Map<String, Object>> productList = new ArrayList<>();
+            for (Product product : products) {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("id", product.getId());
+                productData.put("productName", product.getProductName());
+                productData.put("description", product.getDescription());
+                productData.put("price", product.getPrice());
+                productData.put("stockQuantity", product.getStockQuantity());
+                productData.put("packageDimensions", product.getPackageDimensions());
+                productData.put("weightGrams", product.getWeightGrams());
+                productData.put("productType", product.getProductType());
+                productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
+                productData.put("publisherName", product.getPublisherName());
+                productData.put("authorNames", product.getAuthorNames());
+                productData.put("publicationYear", product.getPublicationYear());
+                productData.put("pageCount", product.getPageCount());
+                productData.put("isbn", product.getIsbn());
+                productData.put("coverType", product.getCoverType());
+                productData.put("gradeLevel", product.getGradeLevel());
+                productData.put("ageRating", product.getAgeRating());
+                productData.put("genres", product.getGenres());
+                // Chuyển đổi danh sách ảnh thành danh sách URL
+                List<String> imageUrls = new ArrayList<>(product.getImageUrls());
+                productData.put("imageUrls", imageUrls);
+                // Thêm vào danh sách sản phẩm
+                productList.add(productData);
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("products", productList);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách sản phẩm theo danh mục: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
 }

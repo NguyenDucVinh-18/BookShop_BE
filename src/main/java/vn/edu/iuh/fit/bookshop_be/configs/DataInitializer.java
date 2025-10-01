@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -24,6 +26,7 @@ public class DataInitializer implements CommandLineRunner {
             Category tieuSuHoiKy = new Category("TIỂU SỬ - HỒI KÝ", "Danh mục tiểu sử - hồi ký");
             Category giaoKhoa = new Category("GIÁO KHOA - THAM KHẢO", "Danh mục giáo khoa - tham khảo");
             Category sachNgoaiNgu = new Category("SÁCH HỌC NGOẠI NGỮ", "Danh mục sách học ngoại ngữ");
+            Category dungCuHocSinh = new Category("DỤng cụ học sinh", "Dụng cụ học sinh");
 
             // ==== DANH MỤC CON ====
             // Văn Học
@@ -59,7 +62,8 @@ public class DataInitializer implements CommandLineRunner {
             // Tiểu Sử - Hồi Ký
             Category cauChuyen = new Category("Câu Chuyện Cuộc Đời", "Sách kể chuyện cuộc đời");
             Category chinhTri = new Category("Chính Trị", "Sách chính trị");
-            Category kinhTeHoiKy = new Category("Kinh Tế", "Sách kinh tế hồi ký");
+            // 🔥 Đổi tên để không trùng slug với "KINH TẾ"
+            Category kinhTeHoiKy = new Category("Kinh Tế Hồi Ký", "Sách kinh tế hồi ký");
             Category ngheThuat = new Category("Nghệ Thuật - Giải Trí", "Sách nghệ thuật - giải trí");
 
             // Giáo Khoa - Tham Khảo
@@ -74,96 +78,73 @@ public class DataInitializer implements CommandLineRunner {
             Category tiengHoa = new Category("Tiếng Hoa", "Sách học tiếng Hoa");
             Category tiengHan = new Category("Tiếng Hàn", "Sách học tiếng Hàn");
 
+            // Dụng cụ học sinh
+            Category gomTay = new Category("Gôm - Tẩy", "Gôm tẩy");
+            Category gotButChi = new Category("Gọt Bút Chì", "Gọt bút chì");
+            Category thuoc = new Category("Thước Học Sinh", "Thước");
+            Category boDungCu = new Category("Bộ Dụng Cụ Học Tập", "Bộ dụng cụ học tập");
+
             // ==== LIÊN KẾT CHA - CON ====
-            // Văn Học
-            vanHoc.getSubCategories().add(tieuThuyet);
-            vanHoc.getSubCategories().add(truyenNgan);
-            vanHoc.getSubCategories().add(lightNovel);
-            vanHoc.getSubCategories().add(ngonTinh);
+            vanHoc.getSubCategories().addAll(List.of(tieuThuyet, truyenNgan, lightNovel, ngonTinh));
             tieuThuyet.setParentCategory(vanHoc);
             truyenNgan.setParentCategory(vanHoc);
             lightNovel.setParentCategory(vanHoc);
             ngonTinh.setParentCategory(vanHoc);
 
-            // Kinh Tế
-            kinhTe.getSubCategories().add(nhanVat);
-            kinhTe.getSubCategories().add(quanTri);
-            kinhTe.getSubCategories().add(marketing);
-            kinhTe.getSubCategories().add(phanTich);
+            kinhTe.getSubCategories().addAll(List.of(nhanVat, quanTri, marketing, phanTich));
             nhanVat.setParentCategory(kinhTe);
             quanTri.setParentCategory(kinhTe);
             marketing.setParentCategory(kinhTe);
             phanTich.setParentCategory(kinhTe);
 
-            // Tâm Lý - Kỹ Năng Sống
-            tamLyKyNangSong.getSubCategories().add(kyNangSong);
-            tamLyKyNangSong.getSubCategories().add(renLuyenNhanCach);
-            tamLyKyNangSong.getSubCategories().add(tamLy);
-            tamLyKyNangSong.getSubCategories().add(sachTuoiMoiLon);
+            tamLyKyNangSong.getSubCategories().addAll(List.of(kyNangSong, renLuyenNhanCach, tamLy, sachTuoiMoiLon));
             kyNangSong.setParentCategory(tamLyKyNangSong);
             renLuyenNhanCach.setParentCategory(tamLyKyNangSong);
             tamLy.setParentCategory(tamLyKyNangSong);
             sachTuoiMoiLon.setParentCategory(tamLyKyNangSong);
 
-            // Nuôi Dạy Con
-            nuoiDayCon.getSubCategories().add(camNangChaMe);
-            nuoiDayCon.getSubCategories().add(phuongPhapGd);
-            nuoiDayCon.getSubCategories().add(phatTrienTriTue);
-            nuoiDayCon.getSubCategories().add(kyNangTre);
+            nuoiDayCon.getSubCategories().addAll(List.of(camNangChaMe, phuongPhapGd, phatTrienTriTue, kyNangTre));
             camNangChaMe.setParentCategory(nuoiDayCon);
             phuongPhapGd.setParentCategory(nuoiDayCon);
             phatTrienTriTue.setParentCategory(nuoiDayCon);
             kyNangTre.setParentCategory(nuoiDayCon);
 
-            // Sách Thiếu Nhi
-            sachThieuNhi.getSubCategories().add(manga);
-            sachThieuNhi.getSubCategories().add(kienThucBachKhoa);
-            sachThieuNhi.getSubCategories().add(sachTranh);
-            sachThieuNhi.getSubCategories().add(vuaHocVuaChoi);
+            sachThieuNhi.getSubCategories().addAll(List.of(manga, kienThucBachKhoa, sachTranh, vuaHocVuaChoi));
             manga.setParentCategory(sachThieuNhi);
             kienThucBachKhoa.setParentCategory(sachThieuNhi);
             sachTranh.setParentCategory(sachThieuNhi);
             vuaHocVuaChoi.setParentCategory(sachThieuNhi);
 
-            // Tiểu Sử - Hồi Ký
-            tieuSuHoiKy.getSubCategories().add(cauChuyen);
-            tieuSuHoiKy.getSubCategories().add(chinhTri);
-            tieuSuHoiKy.getSubCategories().add(kinhTeHoiKy);
-            tieuSuHoiKy.getSubCategories().add(ngheThuat);
+            tieuSuHoiKy.getSubCategories().addAll(List.of(cauChuyen, chinhTri, kinhTeHoiKy, ngheThuat));
             cauChuyen.setParentCategory(tieuSuHoiKy);
             chinhTri.setParentCategory(tieuSuHoiKy);
             kinhTeHoiKy.setParentCategory(tieuSuHoiKy);
             ngheThuat.setParentCategory(tieuSuHoiKy);
 
-            // Giáo Khoa - Tham Khảo
-            giaoKhoa.getSubCategories().add(sachGiaoKhoa);
-            giaoKhoa.getSubCategories().add(sachThamKhao);
-            giaoKhoa.getSubCategories().add(luyenThi);
-            giaoKhoa.getSubCategories().add(mauGiao);
+            giaoKhoa.getSubCategories().addAll(List.of(sachGiaoKhoa, sachThamKhao, luyenThi, mauGiao));
             sachGiaoKhoa.setParentCategory(giaoKhoa);
             sachThamKhao.setParentCategory(giaoKhoa);
             luyenThi.setParentCategory(giaoKhoa);
             mauGiao.setParentCategory(giaoKhoa);
 
-            // Sách Học Ngoại Ngữ
-            sachNgoaiNgu.getSubCategories().add(tiengAnh);
-            sachNgoaiNgu.getSubCategories().add(tiengNhat);
-            sachNgoaiNgu.getSubCategories().add(tiengHoa);
-            sachNgoaiNgu.getSubCategories().add(tiengHan);
+            sachNgoaiNgu.getSubCategories().addAll(List.of(tiengAnh, tiengNhat, tiengHoa, tiengHan));
             tiengAnh.setParentCategory(sachNgoaiNgu);
             tiengNhat.setParentCategory(sachNgoaiNgu);
             tiengHoa.setParentCategory(sachNgoaiNgu);
             tiengHan.setParentCategory(sachNgoaiNgu);
 
+            dungCuHocSinh.getSubCategories().addAll(List.of(gomTay, gotButChi, thuoc, boDungCu));
+            gomTay.setParentCategory(dungCuHocSinh);
+            gotButChi.setParentCategory(dungCuHocSinh);
+            thuoc.setParentCategory(dungCuHocSinh);
+            boDungCu.setParentCategory(dungCuHocSinh);
+
             // ==== LƯU DATABASE ====
-            categoryRepository.save(vanHoc);
-            categoryRepository.save(kinhTe);
-            categoryRepository.save(tamLyKyNangSong);
-            categoryRepository.save(nuoiDayCon);
-            categoryRepository.save(sachThieuNhi);
-            categoryRepository.save(tieuSuHoiKy);
-            categoryRepository.save(giaoKhoa);
-            categoryRepository.save(sachNgoaiNgu);
+            categoryRepository.saveAll(List.of(
+                    vanHoc, kinhTe, tamLyKyNangSong, nuoiDayCon,
+                    sachThieuNhi, tieuSuHoiKy, giaoKhoa,
+                    sachNgoaiNgu, dungCuHocSinh
+            ));
         }
     }
 }
