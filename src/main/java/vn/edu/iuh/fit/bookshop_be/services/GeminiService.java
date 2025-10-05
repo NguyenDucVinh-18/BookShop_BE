@@ -1,6 +1,5 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,33 +18,29 @@ public class GeminiService {
     private String API_KEY;
     private final ProductService productService;
 
-    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=";
 
     public GeminiService(ProductService productService) {
         this.productService = productService;
     }
 
-    public String chatboxAI(String userMessage) throws IOException {
+    public String chatboxAI(Map<String, String> requestBody) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
 
+        String userMessage = requestBody.get("message");
+        String context = requestBody.get("context"); // Lấy ngữ cảnh từ FE
+
         List<Product> products = productService.getAllProducts();
-        StringBuilder productList = new StringBuilder("Danh sách sản phẩm hiện có:\n");
-        for (Product product : products) {
-            productList.append("- ").append(product.getProductName())
-                    .append(" (Giá: ").append(product.getPrice())
-                    .append(", Tồn kho: ").append(product.getStockQuantity())
-                    .append(")\n");
-        }
+        String textResponse = generateProductText(products, userMessage);
 
-        // Prompt đóng vai trò nhân viên bán sách
-        String systemPrompt = "Bạn là một nhân viên bán sách. Hãy trả lời khách hàng một cách lịch sự, rõ ràng và hữu ích.";
+        String systemPrompt = "Bạn là một nhân viên bán sách. Hãy trả lời khách hàng một cách lịch sự, rõ ràng và hữu ích dựa trên ngữ cảnh cuộc trò chuyện trước đó:\n" +
+                (context != null ? context + "\n" : "") +
+                textResponse + "\nKhách hàng hỏi: " + userMessage;
 
-
-        // Request body (gồm text + image)
         Map<String, Object> request = new HashMap<>();
         request.put("contents", new Object[]{
                 Map.of("parts", new Object[]{
-                        Map.of("text", systemPrompt + "\n" + productList.toString() + "\nKhách hàng hỏi: " + userMessage)
+                        Map.of("text", systemPrompt)
                 })
         });
 
@@ -56,28 +51,40 @@ public class GeminiService {
             Map content = (Map) firstCandidate.get("content");
             java.util.List parts = (java.util.List) content.get("parts");
             Map firstPart = (Map) parts.get(0);
-            return (String) firstPart.get("text");
+            String reply = (String) firstPart.get("text");
+            return reply != null ? reply.replace("*", "") : "Xin lỗi, hiện tại tôi chưa thể trả lời.";
         }
         return "Xin lỗi, hiện tại tôi chưa thể trả lời.";
     }
 
+    private String generateProductText(List<Product> products, String userMessage) {
+        StringBuilder text = new StringBuilder();
+        text.append("Chào mừng bạn đến với HIEUVINHbook!\n")
+                .append("Hiên tại, HIEUVINHbook có những sản phẩm sau đây:\n");
+
+        for (Product product : products) {
+            text.append("- ").append(product.getProductName())
+                    .append(" - Giá: ").append(product.getPrice()).append(" VND")
+                    .append(" - Tồn kho: ").append(product.getStockQuantity()).append(" cuốn\n");
+        }
+
+        text.append("Chúng tôi rất hân hạnh được phục vụ bạn. Nếu bạn cần thêm thông tin, hãy liên hệ với HIEUVINHbook nhé!\n")
+                .append("Câu hỏi của bạn: ").append(userMessage);
+        return text.toString();
+    }
 
     public String askGemini(String userMessage, byte[] imageBytes) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Prompt đóng vai trò nhân viên bán sách
         String systemPrompt = "Bạn là một nhân viên bán sách. Hãy trả lời khách hàng một cách lịch sự, rõ ràng và hữu ích.";
-
-        // encode ảnh sang base64
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-        // Request body (gồm text + image)
         Map<String, Object> request = new HashMap<>();
         request.put("contents", new Object[]{
                 Map.of("parts", new Object[]{
                         Map.of("text", systemPrompt + "\nKhách hàng hỏi: " + userMessage),
                         Map.of("inlineData", Map.of(
-                                "mimeType", "image/png",   // hoặc "image/jpeg"
+                                "mimeType", "image/png",
                                 "data", base64Image
                         ))
                 })
@@ -89,7 +96,9 @@ public class GeminiService {
             Map content = (Map) firstCandidate.get("content");
             java.util.List parts = (java.util.List) content.get("parts");
             Map firstPart = (Map) parts.get(0);
-            return (String) firstPart.get("text");
+            String reply = (String) firstPart.get("text");
+            // Loại bỏ tất cả các dấu * từ reply
+            return reply != null ? reply.replace("*", "") : "Xin lỗi, hiện tại tôi chưa thể trả lời.";
         }
         return "Xin lỗi, hiện tại tôi chưa thể trả lời.";
     }
@@ -97,14 +106,11 @@ public class GeminiService {
     public boolean isImageRelatedToBook(byte[] imageBytes) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Prompt yêu cầu Gemini chỉ trả lời "YES" hoặc "NO"
         String prompt = "Hãy kiểm tra bức ảnh này có liên quan đến sách, bìa sách, thư viện hay hoạt động đọc sách không. "
                 + "Nếu có thì trả lời duy nhất 'YES', nếu không thì trả lời duy nhất 'NO'.";
 
-        // Encode ảnh sang base64
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-        // Tạo body request
         Map<String, Object> request = new HashMap<>();
         request.put("contents", new Object[]{
                 Map.of("parts", new Object[]{
@@ -128,5 +134,4 @@ public class GeminiService {
         }
         return false;
     }
-
 }

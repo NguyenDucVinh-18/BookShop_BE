@@ -20,9 +20,10 @@ public class ChatController {
     }
 
     @PostMapping("/chatboxAI")
-    public Map<String, String> chatboxAI(@RequestBody String message) throws IOException {
-//        String message = payload.get("");
-        String reply = geminiService.chatboxAI(message);
+    public Map<String, String> chatboxAI(@RequestBody Map<String, String> payload) throws IOException {
+        String message = payload.get("message");
+        String context = payload.get("context");
+        String reply = geminiService.chatboxAI(Map.of("message", message, "context", context));
         return Map.of("reply", reply);
     }
 
