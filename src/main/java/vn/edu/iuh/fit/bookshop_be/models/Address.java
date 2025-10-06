@@ -28,9 +28,9 @@ public class Address {
     private String note;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "customer_id")
     @JsonIgnore
-    private User user;
+    private Customer customer;
 
     // Getters and setters
     public int getId() { return id; }
@@ -51,9 +51,13 @@ public class Address {
         this.district = district;
     }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public Customer getCustomer() {
+        return customer;
+    }
 
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
 
     public String getWard() {
         return ward;

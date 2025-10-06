@@ -15,9 +15,9 @@ public class Order {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     @JsonIgnore
-    private User user;
+    private Customer customer;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -61,8 +61,13 @@ public class Order {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
 
     public OrderStatus getStatus() {
         return status;

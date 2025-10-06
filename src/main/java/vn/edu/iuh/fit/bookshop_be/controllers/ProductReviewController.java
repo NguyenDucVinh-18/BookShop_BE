@@ -10,11 +10,11 @@ import vn.edu.iuh.fit.bookshop_be.dtos.ReviewProductRequest;
 import vn.edu.iuh.fit.bookshop_be.models.OrderItem;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
 import vn.edu.iuh.fit.bookshop_be.models.ProductReview;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.services.OrderItemService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductReviewService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,14 +26,14 @@ import java.util.Map;
 @RequestMapping("/api/product-review")
 public class ProductReviewController {
     private final ProductReviewService productReviewService;
-    private final UserService userService;
+    private final CustomerService customerService;
     private final ProductService productService;
     private final OrderItemService orderItemService;
     private final Cloudinary cloudinary;
 
-    public ProductReviewController(ProductReviewService productReviewService, UserService userService, ProductService productService, OrderItemService orderItemService, Cloudinary cloudinary) {
+    public ProductReviewController(ProductReviewService productReviewService, CustomerService customerService, ProductService productService, OrderItemService orderItemService, Cloudinary cloudinary) {
         this.productReviewService = productReviewService;
-        this.userService = userService;
+        this.customerService = customerService;
         this.productService = productService;
         this.orderItemService = orderItemService;
         this.cloudinary = cloudinary;
@@ -54,8 +54,8 @@ public class ProductReviewController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để viết đánh giá sản phẩm");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -96,7 +96,7 @@ public class ProductReviewController {
                    orderItem,
                     request.getRating(),
                     request.getComment(),
-                    user,
+                    customer,
                     product
             );
 

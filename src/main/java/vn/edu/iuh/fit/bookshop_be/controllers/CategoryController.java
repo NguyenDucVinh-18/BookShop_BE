@@ -1,17 +1,17 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
 
-import com.cloudinary.utils.ObjectUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.services.CategoryService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
+import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +21,13 @@ import java.util.Map;
 @RequestMapping("/api/category")
 public class CategoryController {
     private final CategoryService categoryService;
-    private final UserService userService;
+    private final EmployeeService employeeService;
+    private final CustomerService customerService;
 
-    public CategoryController(CategoryService categoryService, UserService userService) {
+    public CategoryController(CategoryService categoryService, EmployeeService employeeService, CustomerService customerService) {
         this.categoryService = categoryService;
-        this.userService = userService;
+        this.employeeService = employeeService;
+        this.customerService = customerService;
     }
 
     /**
@@ -42,14 +44,14 @@ public class CategoryController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để tạo danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -198,15 +200,15 @@ public class CategoryController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
 
-            if (user == null ) {
+            if (employee == null ) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -279,15 +281,15 @@ public class CategoryController {
         Map<String, Object> response = new HashMap<>();
         try {
             // Kiểm tra token và lấy thông tin người dùng
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
             // Kiểm tra quyền
-            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa danh mục");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

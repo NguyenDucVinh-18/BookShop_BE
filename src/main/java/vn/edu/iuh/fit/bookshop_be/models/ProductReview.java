@@ -22,9 +22,9 @@ public class ProductReview {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     @JsonIgnore
-    private User user;
+    private Customer customer;
 
     @OneToOne
     @JoinColumn(name = "order_item_id", nullable = false)
@@ -108,12 +108,12 @@ public class ProductReview {
         this.reviewDate = reviewDate;
     }
 
-    public User getUser() {
-        return user;
+    public Customer getUser() {
+        return customer;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(Customer customer) {
+        this.customer = customer;
     }
 
     public OrderItem getOrderItem() {

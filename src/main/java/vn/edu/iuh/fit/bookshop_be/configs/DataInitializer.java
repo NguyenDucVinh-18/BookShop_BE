@@ -1,10 +1,14 @@
 package vn.edu.iuh.fit.bookshop_be.configs;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.repositories.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import vn.edu.iuh.fit.bookshop_be.repositories.EmployeeRepository;
 
 import java.util.List;
 
@@ -13,6 +17,12 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -145,6 +155,18 @@ public class DataInitializer implements CommandLineRunner {
                     sachThieuNhi, tieuSuHoiKy, giaoKhoa,
                     sachNgoaiNgu, dungCuHocSinh
             ));
+        }
+
+        if (employeeRepository.count() == 0) {
+            // Tạo tài khoản quản lý mặc định
+            Employee admin = new Employee();
+            admin.setUsername("Admin");
+            admin.setEmail("admin@gmail.com");
+            admin.setPasswordHash(passwordEncoder.encode("123456")); // Mật khẩu sẽ được mã hóa trong
+            admin.setPhone("0123456789");
+            admin.setActive(true);
+            admin.setRole(Role.MANAGER);
+            employeeRepository.save(admin);
         }
     }
 }

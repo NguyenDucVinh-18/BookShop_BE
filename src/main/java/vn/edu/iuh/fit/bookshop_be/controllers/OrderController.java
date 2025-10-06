@@ -1,19 +1,14 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
-import com.cloudinary.utils.ObjectUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 import vn.edu.iuh.fit.bookshop_be.dtos.PlaceOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.services.*;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -22,13 +17,15 @@ import java.util.*;
 @RequestMapping("/api/order")
 public class OrderController{
     private final OrderService orderService;
-    private final UserService userService;
+    private final CustomerService customerService;
+    private final EmployeeService employeeService;
     private final AddressService addressService;
     private final VNPayService vNPayService;
 
-    public OrderController(OrderService orderService, UserService userService, AddressService addressService, VNPayService vNPayService) {
+    public OrderController(OrderService orderService, CustomerService customerService, EmployeeService employeeService, AddressService addressService, VNPayService vNPayService) {
         this.orderService = orderService;
-        this.userService = userService;
+        this.customerService = customerService;
+        this.employeeService = employeeService;
         this.addressService = addressService;
         this.vNPayService = vNPayService;
     }
@@ -46,9 +43,9 @@ public class OrderController{
             ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
 
-            if (user == null ) {
+            if (customer == null ) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật ảnh đại diện");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -84,7 +81,7 @@ public class OrderController{
 
             // Thực hiện đặt hàng
             Map<String, Object> data = new HashMap<>();
-            Order order = orderService.placeOrder(user, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts());
+            Order order = orderService.placeOrder(customer, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts());
             if(order.getPaymentMethod() == PaymentMethod.BANKING){
                 String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
                 data.put("vnpUrl", vnpUrl);
@@ -99,7 +96,7 @@ public class OrderController{
             data.put("shippingAddress", order.getAddress());
             data.put("paymentMethod", order.getPaymentMethod());
             data.put("note", order.getNote());
-            data.put("user", user.getId());
+            data.put("user", customer.getId());
             data.put("orderItems", order.getOrderItems());
 
             response.put("data", data);
@@ -123,14 +120,14 @@ public class OrderController{
     public ResponseEntity<Map<String, Object>> getOrders(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            List<Order> orders = orderService.findByUser(user);
+            List<Order> orders = orderService.findByCustomer(customer);
             response.put("status", "success");
             response.put("message", "Lấy danh sách đơn hàng thành công");
             response.put("data", orders);
@@ -157,14 +154,14 @@ public class OrderController{
     {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (customer.getRole() == null || ( customer.getRole() != Role.STAFF && customer.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -203,14 +200,14 @@ public class OrderController{
             @RequestBody Map<String, String> reason) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
             String reasonStr = reason.get("reason");
             if (reasonStr == null || reasonStr.isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Lý do hủy đơn hàng không được để trống");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-            if (user == null) {
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để hủy đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -223,7 +220,7 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            if (!order.getUser().getId().equals(user.getId())) {
+            if (!order.getCustomer().getId().equals(customer.getId())) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền hủy đơn hàng này");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -378,13 +375,13 @@ public class OrderController{
     public ResponseEntity<Map<String, Object>> getAllOrders(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xem tất cả đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -413,8 +410,8 @@ public class OrderController{
             @PathVariable Integer orderId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -422,7 +419,7 @@ public class OrderController{
 
             Order order = null;
 
-            if(user.getRole() == Role.STAFF || user.getRole() == Role.MANAGER) {
+            if(customer.getRole() == Role.STAFF || customer.getRole() == Role.MANAGER) {
                 order = orderService.findById(orderId);
                 if (order == null) {
                     response.put("status", "error");
@@ -430,7 +427,7 @@ public class OrderController{
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                 }
             } else{
-                order = orderService.findByIdAndUser(orderId, user);
+                order = orderService.findByIdAndUser(orderId, customer);
                 if (order == null) {
                     response.put("status", "error");
                     response.put("message", "Nguoời dùng không có đơn hàng này hoặc đơn hàng không tồn tại");

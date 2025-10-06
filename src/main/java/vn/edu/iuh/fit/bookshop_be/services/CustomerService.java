@@ -4,17 +4,15 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
-import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
-import vn.edu.iuh.fit.bookshop_be.models.User;
-import vn.edu.iuh.fit.bookshop_be.repositories.UserRepository;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
+import vn.edu.iuh.fit.bookshop_be.repositories.CustomerRepository;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 
 import java.net.URLEncoder;
@@ -24,9 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class UserService {
+public class CustomerService {
     @Autowired
-    private UserRepository userRepository;
+    private CustomerRepository customerRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -47,23 +45,23 @@ public class UserService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public User save(User user) {
-        return userRepository.save(user);
+    public Customer save(Customer customer) {
+        return customerRepository.save(customer);
     }
 
-    public User findById(Integer id) {
-        return userRepository.findById(id).orElse(null);
+    public Customer findById(Integer id) {
+        return customerRepository.findById(id).orElse(null);
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Customer findByEmail(String email) {
+        return customerRepository.findByEmail(email);
     }
 
     public boolean checkPassword(String passwordInput, String password) {
         return passwordEncoder.matches(passwordInput, password);
     }
 
-    public User getUserByToken(String authHeader) {
+    public Customer getCustomerByToken(String authHeader) {
         try {
             // Kiểm tra xem header có đúng định dạng không
             if (authHeader == null) {
@@ -79,39 +77,40 @@ public class UserService {
 
             // Trích xuất username từ token
             String email = jwtUtil.extractEmail(token);
-            if (email == null) {
+            Role role = Role.valueOf(jwtUtil.extractRole(token));
+            if (email == null || role == null || role != Role.CUSTOMER) {
                 return null;
             }
 
             // Tìm người dùng từ database
-            User user = userRepository.findByEmail(email);
-            return user;
+            Customer customer = customerRepository.findByEmail(email);
+            return customer;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
 
-    public User signUp(SignUpRequest request) {
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPasswordHash(request.getPassword());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setEnabled(false);
-        user.setVerificationCode(UUID.randomUUID().toString());
-        if(userRepository.findByEmail(user.getEmail()) != null){
+    public Customer signUp(SignUpRequest request) {
+        Customer customer = new Customer();
+        customer.setUsername(request.getUsername());
+        customer.setPasswordHash(request.getPassword());
+        customer.setEmail(request.getEmail());
+        customer.setPhone(request.getPhone());
+        customer.setEnabled(false);
+        customer.setVerificationCode(UUID.randomUUID().toString());
+        if(customerRepository.findByEmail(customer.getEmail()) != null){
             throw new IllegalArgumentException("Email đã tồn tại ");
         }
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setRole(Role.CUSTOMER);
-        user.setCreatedAt(LocalDateTime.now());
-        String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
-        user.setAvatarUrl(avatarUrl);
-        user.setActive(false);
-        User savedUser =  userRepository.save(user);
-        sendVerificationEmail(user.getEmail(), user.getVerificationCode());
-        return savedUser;
+        customer.setPasswordHash(passwordEncoder.encode(customer.getPasswordHash()));
+        customer.setRole(Role.CUSTOMER);
+        customer.setCreatedAt(LocalDateTime.now());
+        String avatarUrl = avatarService.createAndUploadAvatar(customer.getUsername(), customer.getEmail());
+        customer.setAvatarUrl(avatarUrl);
+        customer.setActive(false);
+        Customer savedCustomer =  customerRepository.save(customer);
+        sendVerificationEmail(customer.getEmail(), customer.getVerificationCode());
+        return savedCustomer;
     }
 
 
@@ -266,53 +265,53 @@ public class UserService {
     }
 
     public boolean verifyUser(String verificationCode) {
-        User user = userRepository.findByVerificationCode(verificationCode);;
-        if (user.isEnabled()) {
+        Customer customer = customerRepository.findByVerificationCode(verificationCode);;
+        if (customer.isEnabled()) {
             return false;
         }
-        user.setEnabled(true);
-        user.setVerificationCode(null); // Xóa mã xác thực
-        user.setActive(true);
-        userRepository.save(user);
+        customer.setEnabled(true);
+        customer.setVerificationCode(null); // Xóa mã xác thực
+        customer.setActive(true);
+        customerRepository.save(customer);
         return true;
     }
 
-    public User findByVerificationCode(String code) {
-        return userRepository.findByVerificationCode(code);
+    public Customer findByVerificationCode(String code) {
+        return customerRepository.findByVerificationCode(code);
     }
 
-    public User changePassword(User user, String newPassword) {
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        return userRepository.save(user);
+    public Customer changePassword(Customer customer, String newPassword) {
+        customer.setPasswordHash(passwordEncoder.encode(newPassword));
+        return customerRepository.save(customer);
     }
 
-    public User createAccount(String username, String email, String password, String phone, Role role) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPasswordHash(password);
-        user.setEmail(email);
-        user.setPhone(phone);
-        user.setEnabled(true);
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setRole(role);
-        user.setCreatedAt(LocalDateTime.now());
-        String avatarUrl = avatarService.createAndUploadAvatar(user.getUsername(), user.getEmail());
-        user.setAvatarUrl(avatarUrl);
-        user.setActive(true);
-        User savedUser =  userRepository.save(user);
-        return savedUser;
+    public Customer createAccountCustomer(String username, String email, String password, String phone) {
+        Customer customer = new Customer();
+        customer.setUsername(username);
+        customer.setPasswordHash(password);
+        customer.setEmail(email);
+        customer.setPhone(phone);
+        customer.setEnabled(true);
+        customer.setPasswordHash(passwordEncoder.encode(customer.getPasswordHash()));
+        customer.setRole(Role.CUSTOMER);
+        customer.setCreatedAt(LocalDateTime.now());
+        String avatarUrl = avatarService.createAndUploadAvatar(customer.getUsername(), customer.getEmail());
+        customer.setAvatarUrl(avatarUrl);
+        customer.setActive(true);
+        Customer savedCustomer =  customerRepository.save(customer);
+        return savedCustomer;
     }
 
-    public List<User> getAllUsersByRole(Role role) {
-        return userRepository.findByRole(role);
+
+    public List<Customer> getAllCustomer() {
+        return customerRepository.findAll();
     }
 
-    public User updateInfoAccount(User user, String username, String phone, String email, Role role) {
-        user.setUsername(username);
-        user.setPhone(phone);
-        user.setEmail(email);
-        user.setRole(role);
-        return userRepository.save(user);
+    public Customer updateInfoAccount(Customer customer, String username, String phone, String email) {
+        customer.setUsername(username);
+        customer.setPhone(phone);
+        customer.setEmail(email);
+        return customerRepository.save(customer);
     }
 
 }

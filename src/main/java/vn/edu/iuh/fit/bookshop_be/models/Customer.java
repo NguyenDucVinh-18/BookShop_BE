@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "customers")
+public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -33,22 +33,22 @@ public class User {
     @Column(length = 20)
     private String phone;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     private Cart cart;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Order> orders;
 
-    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
-    private List<Message> sentMessages;
+//    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
+//    private List<Message> sentMessages;
+//
+//    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
+//    private List<Message> receivedMessages;
 
-    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
-    private List<Message> receivedMessages;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<ProductReview> productReviews;
 
     @Column(name = "verification_code", length = 64)
@@ -60,9 +60,9 @@ public class User {
     @Column(name = "is_active")
     private boolean isActive;
 
-    public User() {}
+    public Customer() {}
 
-    public User(Role role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
+    public Customer(Role role, String username, String passwordHash, String email, LocalDateTime createdAt, String avatarUrl, String phone) {
         this.role = role;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -103,11 +103,11 @@ public class User {
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
 
-    public List<Message> getSentMessages() { return sentMessages; }
-    public void setSentMessages(List<Message> sentMessages) { this.sentMessages = sentMessages; }
-
-    public List<Message> getReceivedMessages() { return receivedMessages; }
-    public void setReceivedMessages(List<Message> receivedMessages) { this.receivedMessages = receivedMessages; }
+//    public List<Message> getSentMessages() { return sentMessages; }
+//    public void setSentMessages(List<Message> sentMessages) { this.sentMessages = sentMessages; }
+//
+//    public List<Message> getReceivedMessages() { return receivedMessages; }
+//    public void setReceivedMessages(List<Message> receivedMessages) { this.receivedMessages = receivedMessages; }
 
     public Cart getCart() { return cart; }
     public void setCart(Cart cart) { this.cart = cart; }

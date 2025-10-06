@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Cart;
 import vn.edu.iuh.fit.bookshop_be.models.CartItem;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.repositories.CartItemRepository;
 import vn.edu.iuh.fit.bookshop_be.repositories.CartRepository;
 
@@ -20,11 +20,11 @@ public class CartService {
         this.cartItemRepository = cartItemRepository;
     }
 
-    public Cart addProductToCart(User user, Product product, Integer quantity) {
-        Cart cart = cartRepository.findByUser(user);
+    public Cart addProductToCart(Customer customer, Product product, Integer quantity) {
+        Cart cart = cartRepository.findByCustomer(customer);
         if (cart == null) {
            Cart newCart = new Cart();
-           newCart.setUser(user);
+           newCart.setUser(customer);
            newCart.setCount(0);
            newCart.setCreatedAt(LocalDateTime.now());
            cart = cartRepository.save(newCart);
@@ -48,8 +48,8 @@ public class CartService {
         return cart;
     }
 
-    public Cart removeProductFromCart(User user, Product product) {
-        Cart cart = cartRepository.findByUser(user);
+    public Cart removeProductFromCart(Customer customer, Product product) {
+        Cart cart = cartRepository.findByCustomer(customer);
         if (cart != null) {
             CartItem cartItem = cartItemRepository.findByCartAndProduct(cart, product);
             if (cartItem != null) {
@@ -62,8 +62,8 @@ public class CartService {
         return cart;
     }
 
-    public Cart getCartByUser(User user) {
-        return cartRepository.findByUser(user);
+    public Cart getCartByUser(Customer customer) {
+        return cartRepository.findByCustomer(customer);
     }
 
 

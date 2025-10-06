@@ -4,8 +4,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.OrderItem;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
 import vn.edu.iuh.fit.bookshop_be.models.ProductReview;
-import vn.edu.iuh.fit.bookshop_be.models.User;
-import vn.edu.iuh.fit.bookshop_be.repositories.OrderItemRepository;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.repositories.ProductReviewRepository;
 
 import java.util.List;
@@ -22,14 +21,14 @@ public class ProductReviewService {
         return productReviewRepository.save(productReview);
     }
 
-    public ProductReview createProductReview(OrderItem orderItem, Integer rating, String comment, User user, Product product) {
+    public ProductReview createProductReview(OrderItem orderItem, Integer rating, String comment, Customer customer, Product product) {
         ProductReview productReview = new ProductReview();
         productReview.setOrderItem(orderItem);
         productReview.setRating(rating);
         productReview.setComment(comment);
-        productReview.setUser(user);
+        productReview.setUser(customer);
         productReview.setProduct(product);
-        productReview.setUserName(user.getUsername());
+        productReview.setUserName(customer.getUsername());
         productReview.setReviewDate(java.time.LocalDateTime.now());
         orderItem.setReviewed(true);
         return productReviewRepository.save(productReview);

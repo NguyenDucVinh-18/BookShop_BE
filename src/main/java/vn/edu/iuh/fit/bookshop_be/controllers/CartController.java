@@ -4,14 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.AddProductToCartReqest;
-import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Cart;
 import vn.edu.iuh.fit.bookshop_be.models.CartItem;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.services.CartService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,12 +21,12 @@ import java.util.Map;
 @RequestMapping("/api/cart")
 public class CartController {
     private final CartService cartService;
-    private final UserService userService;
+    private final CustomerService customerService;
     private final ProductService productService;
 
-    public CartController(CartService cartService, UserService userService, ProductService productService) {
+    public CartController(CartService cartService, CustomerService customerService, ProductService productService) {
         this.cartService = cartService;
-        this.userService = userService;
+        this.customerService = customerService;
         this.productService = productService;
     }
 
@@ -46,9 +45,9 @@ public class CartController {
         Integer productId = request.getProductId();
         Integer quantity = request.getQuantity();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
 
-            if (user == null ) {
+            if (customer == null ) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -67,7 +66,7 @@ public class CartController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            Cart cart = cartService.addProductToCart(user, product, quantity);
+            Cart cart = cartService.addProductToCart(customer, product, quantity);
             response.put("status", "success");
             response.put("message", "Sản phẩm đã được thêm vào giỏ hàng thành công ");
             Map<String, Object> data = new HashMap<>();
@@ -100,8 +99,8 @@ public class CartController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -114,7 +113,7 @@ public class CartController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            Cart cart = cartService.removeProductFromCart(user, product);
+            Cart cart = cartService.removeProductFromCart(customer, product);
             if (cart == null) {
                 response.put("status", "error");
                 response.put("message", "Giỏ hàng không tồn tại hoặc sản phẩm không có trong giỏ hàng");
@@ -149,13 +148,13 @@ public class CartController {
     public ResponseEntity<Map<String, Object>> getCart(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem giỏ hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            Cart cart = cartService.getCartByUser(user);
+            Cart cart = cartService.getCartByUser(customer);
             if (cart == null) {
                 response.put("status", "error");
                 response.put("message", "Giỏ hàng không tồn tại");

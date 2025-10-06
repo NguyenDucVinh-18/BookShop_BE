@@ -1,6 +1,5 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
-import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
@@ -26,9 +25,9 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public Order placeOrder(User user, PaymentMethod paymentMethod, String address, String phone ,String note, List<ProductOrderRequest> productOrderRequests) {
+    public Order placeOrder(Customer customer, PaymentMethod paymentMethod, String address, String phone , String note, List<ProductOrderRequest> productOrderRequests) {
         Order order = new Order();
-        order.setUser(user);
+        order.setCustomer(customer);
         order.setPaymentMethod(paymentMethod);
         order.setAddress(address);
         order.setPhone(phone);
@@ -88,8 +87,8 @@ public class OrderService {
         return true; // Enough stock
     }
 
-    public List<Order> findByUser(User user) {
-        return orderRepository.findByUser(user);
+    public List<Order> findByCustomer(Customer customer) {
+        return orderRepository.findByCustomer(customer);
     }
 
     public Order findById(Integer orderId) {
@@ -121,7 +120,7 @@ public class OrderService {
         return orderRepository.findAll();
     }
 
-    public Order findByIdAndUser(Integer id, User user) {
-        return orderRepository.findByIdAndUser(id, user);
+    public Order findByIdAndUser(Integer id, Customer customer) {
+        return orderRepository.findByIdAndCustomer(id, customer);
     }
 }

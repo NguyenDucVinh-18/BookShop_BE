@@ -4,11 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.PromotionRequest;
-import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Promotion;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
+import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 import vn.edu.iuh.fit.bookshop_be.services.PromotionService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,11 +19,13 @@ import java.util.Map;
 @RequestMapping("/api/promotion")
 public class PromotionController {
     private final PromotionService promotionService;
-    private final UserService userService;
+    private final CustomerService customerService;
+    private final EmployeeService employeeService;
 
-    public PromotionController(PromotionService promotionService, UserService userService) {
+    public PromotionController(PromotionService promotionService, CustomerService customerService, EmployeeService employeeService) {
         this.promotionService = promotionService;
-        this.userService = userService;
+        this.customerService = customerService;
+        this.employeeService = employeeService;
     }
 
     /**
@@ -45,15 +48,15 @@ public class PromotionController {
         promotion.setEndDate(request.getEndDate());
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để tạo khuyến mãi");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
+            if (!employee.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -113,15 +116,15 @@ public class PromotionController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để lấy danh sách tất cả khuyến mãi");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
+            if (!employee.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy danh sách tất cả khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -159,15 +162,15 @@ public class PromotionController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để lấy thông tin khuyến mãi");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
+            if (!employee.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy thông tin khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -210,15 +213,15 @@ public class PromotionController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật khuyến mãi");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
+            if (!employee.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -293,15 +296,15 @@ public class PromotionController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa khuyến mãi");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
             // Kiểm tra quyền của người dùng
-            if (!user.getRole().equals("ADMIN") && !user.getRole().equals("MANAGER")) {
+            if (!employee.getRole().equals("MANAGER")) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

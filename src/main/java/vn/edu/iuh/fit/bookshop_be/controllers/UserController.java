@@ -11,11 +11,13 @@ import vn.edu.iuh.fit.bookshop_be.dtos.ChangePasswordRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateActiveRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.AddressService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
+import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,13 +26,15 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-    private final UserService userService;
+    private final CustomerService customerService;
+    private final EmployeeService employeeService;
     private final JwtUtil jwtUtil;
     private final Cloudinary cloudinary;
     private final AddressService addressService;
 
-    public UserController(UserService userService, JwtUtil jwtUtil, Cloudinary cloudinary, AddressService addressService) {
-        this.userService = userService;
+    public UserController(CustomerService customerService, EmployeeService employeeService, JwtUtil jwtUtil, Cloudinary cloudinary, AddressService addressService) {
+        this.customerService = customerService;
+        this.employeeService = employeeService;
         this.jwtUtil = jwtUtil;
         this.cloudinary = cloudinary;
         this.addressService = addressService;
@@ -49,9 +53,9 @@ public class UserController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
 
-            if (user == null ) {
+            if (customer == null ) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật ảnh đại diện");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -64,7 +68,7 @@ public class UserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            String folderName =  "avatars/" + user.getEmail() ;
+            String folderName =  "avatars/" + customer.getEmail() ;
             // Upload ảnh lên Cloudinary
             Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
                     ObjectUtils.asMap("folder", folderName));
@@ -72,21 +76,21 @@ public class UserController {
             String imageUrl = (String) uploadResult.get("secure_url");
 
             // Cập nhật avatar vào user
-            user.setAvatarUrl(imageUrl);
-            userService.save(user);
+            customer.setAvatarUrl(imageUrl);
+            customerService.save(customer);
 
             // Trả kết quả
             response.put("status", "success");
             response.put("message", "Cập nhật ảnh đại diện thành công");
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
+            Customer customerRender = new Customer();
+            customerRender.setId(customer.getId());
+            customerRender.setUsername(customer.getUsername());
+            customerRender.setEmail(customer.getEmail());
+            customerRender.setRole(customer.getRole());
+            customerRender.setAvatarUrl(customer.getAvatarUrl());
 
             Map<String, Object> data = new HashMap<>();
-            data.put("user", userRender);
+            data.put("user", customerRender);
             response.put("data", data);
             return ResponseEntity.ok(response);
 
@@ -103,15 +107,15 @@ public class UserController {
      * @param request
      * @return trả về thông tin người dùng sau khi cập nhật
      */
-        @PutMapping("/updateInfo")
+    @PutMapping("/updateInfo")
     public ResponseEntity<Map<String, Object>> updateInfo(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UpdateInfoRequest request
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật thông tin");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -130,22 +134,22 @@ public class UserController {
             }
 
             // Cập nhật thông tin người dùng
-            user.setUsername(request.getUsername());
-            user.setPhone(request.getPhone());
-            userService.save(user);
+            customer.setUsername(request.getUsername());
+            customer.setPhone(request.getPhone());
+            customerService.save(customer);
 
             response.put("status", "success");
             response.put("message", "Cập nhật thông tin thành công");
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
-            userRender.setPhone(user.getPhone());
+            Customer customerRender = new Customer();
+            customerRender.setId(customer.getId());
+            customerRender.setUsername(customer.getUsername());
+            customerRender.setEmail(customer.getEmail());
+            customerRender.setRole(customer.getRole());
+            customerRender.setAvatarUrl(customer.getAvatarUrl());
+            customerRender.setPhone(customer.getPhone());
 
             Map<String, Object> data = new HashMap<>();
-            data.put("user", userRender);
+            data.put("user", customerRender);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -170,8 +174,8 @@ public class UserController {
             ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để đổi mật khẩu");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -180,7 +184,7 @@ public class UserController {
             String currentPassword = request.getCurrentPassword();
             String newPassword = request.getNewPassword();
 
-            if (!userService.checkPassword(currentPassword, user.getPasswordHash())) {
+            if (!customerService.checkPassword(currentPassword, customer.getPasswordHash())) {
                 response.put("status", "error");
                 response.put("message", "Mật khẩu hiện tại không đúng");
                 return ResponseEntity.badRequest().body(response);
@@ -194,19 +198,19 @@ public class UserController {
             }
 
 
-            User userChange = userService.changePassword(user, newPassword);
+            Customer customerChange = customerService.changePassword(customer, newPassword);
 
             response.put("status", "success");
             response.put("message", "Đổi mật khẩu thành công");
             Map<String, Object> data = new HashMap<>();
-            User userRender = new User();
-            userRender.setId(userChange.getId());
-            userRender.setUsername(userChange.getUsername());
-            userRender.setEmail(userChange.getEmail());
-            userRender.setRole(userChange.getRole());
-            userRender.setAvatarUrl(userChange.getAvatarUrl());
-            userRender.setPhone(userChange.getPhone());
-            data.put("user", userRender);
+            Customer customerRender = new Customer();
+            customerRender.setId(customerChange.getId());
+            customerRender.setUsername(customerChange.getUsername());
+            customerRender.setEmail(customerChange.getEmail());
+            customerRender.setRole(customerChange.getRole());
+            customerRender.setAvatarUrl(customerChange.getAvatarUrl());
+            customerRender.setPhone(customerChange.getPhone());
+            data.put("user", customerRender);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -228,8 +232,8 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> addAddress(@RequestBody AddressRequest request, @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để thêm địa chỉ");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -241,22 +245,22 @@ public class UserController {
             address.setDistrict(request.getDistrict());
             address.setCity(request.getCity());
             address.setNote(request.getNote());
-            address.setUser(user);
+            address.setCustomer(customer);
             Address savedAddress = addressService.save(address);
 
             response.put("status", "success");
             response.put("message", "Thêm địa chỉ thành công");
             Map<String, Object> data = new HashMap<>();
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
-            List<Address> addresses = user.getAddresses();
+            Customer customerRender = new Customer();
+            customerRender.setId(customer.getId());
+            customerRender.setUsername(customer.getUsername());
+            customerRender.setEmail(customer.getEmail());
+            customerRender.setRole(customer.getRole());
+            customerRender.setAvatarUrl(customer.getAvatarUrl());
+            List<Address> addresses = customer.getAddresses();
             addresses.add(savedAddress);
-            userRender.setAddresses(addresses);
-            data.put("user", userRender);
+            customerRender.setAddresses(addresses);
+            data.put("user", customerRender);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -277,8 +281,8 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> deleteAddress(@PathVariable("addressId") Integer id, @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa địa chỉ");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -291,7 +295,7 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            if (!address.getUser().getId().equals(user.getId())) {
+            if (!address.getCustomer().getId().equals(customer.getId())) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa địa chỉ này");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -300,17 +304,17 @@ public class UserController {
             addressService.deleteById(id);
             response.put("status", "success");
             response.put("message", "Xóa địa chỉ thành công");
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
-            List<Address> addresses = user.getAddresses();
+            Customer customerRender = new Customer();
+            customerRender.setId(customer.getId());
+            customerRender.setUsername(customer.getUsername());
+            customerRender.setEmail(customer.getEmail());
+            customerRender.setRole(customer.getRole());
+            customerRender.setAvatarUrl(customer.getAvatarUrl());
+            List<Address> addresses = customer.getAddresses();
             addresses.removeIf(addr -> addr != null && addr.getId() == id);
-            userRender.setAddresses(addresses);
+            customerRender.setAddresses(addresses);
             Map<String, Object> data = new HashMap<>();
-            data.put("user", userRender);
+            data.put("customer", customerRender);
             response.put("data", data);
 
 
@@ -338,14 +342,14 @@ public class UserController {
     {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để thêm địa chỉ");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            Address existingAddress = addressService.findByIdAndUser(id, user);
+            Address existingAddress = addressService.findByIdAndUser(id, customer);
             if (existingAddress == null) {
                 response.put("status", "error");
                 response.put("message", "Địa chỉ không tồn tại hoặc bạn không có quyền sửa địa chỉ này");
@@ -358,22 +362,22 @@ public class UserController {
             address.setDistrict(request.getDistrict());
             address.setCity(request.getCity());
             address.setNote(request.getNote());
-            address.setUser(user);
+            address.setCustomer(customer);
             addressService.save(address);
 
             response.put("status", "success");
             response.put("message", "Thêm cập nhật thành công");
             Map<String, Object> data = new HashMap<>();
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
-            List<Address> addresses = user.getAddresses();
+            Customer customerRender = new Customer();
+            customerRender.setId(customer.getId());
+            customerRender.setUsername(customer.getUsername());
+            customerRender.setEmail(customer.getEmail());
+            customerRender.setRole(customer.getRole());
+            customerRender.setAvatarUrl(customer.getAvatarUrl());
+            List<Address> addresses = customer.getAddresses();
             addresses.add(address);
-            userRender.setAddresses(addresses);
-            data.put("user", userRender);
+            customerRender.setAddresses(addresses);
+            data.put("user", customerRender);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -385,7 +389,7 @@ public class UserController {
         }
     }
 
-/**
+    /**
      * Lấy danh sách địa chỉ của người dùng
      * @param authHeader
      * @return danh sách địa chỉ của người dùng
@@ -394,18 +398,28 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> getAddresses(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem địa chỉ");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            List<Address> addresses = addressService.findByUser(user);
+            List<Address> addresses = addressService.findByCustomer(customer);
             response.put("status", "success");
             response.put("message", "Lấy danh sách địa chỉ thành công");
             Map<String, Object> data = new HashMap<>();
-            data.put("addresses", addresses);
+            List<Address> addressesRender = addresses.stream().map(u -> {
+                Address address = new Address();
+                address.setId(u.getId());
+                address.setStreet(u.getStreet());
+                address.setWard(u.getWard());
+                address.setDistrict(u.getDistrict());
+                address.setCity(u.getCity());
+                address.setNote(u.getNote());
+                return address;
+            }).toList();
+            data.put("addresses", addressesRender);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -428,14 +442,14 @@ public class UserController {
             @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xem địa chỉ");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            Address address = addressService.findByIdAndUser(id, user);
+            Address address = addressService.findByIdAndUser(id, customer);
             if (address == null) {
                 response.put("status", "error");
                 response.put("message", "Địa chỉ không tồn tại hoặc bạn không có quyền xem địa chỉ này");
@@ -463,33 +477,27 @@ public class UserController {
      * @param id
      * @return ResponseEntity với thông tin kết quả
      */
-    @PutMapping("/updateInfoAccount/{id}")
+    @PutMapping("/updateInfoAccount/{id}/{userRole}")
     public ResponseEntity<Map<String, Object>> updateInfoAccount(
             @RequestBody UpdateInfoRequest request,
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable("id") Integer id
+            @PathVariable("id") Integer id,
+            @PathVariable("userRole") String userRole
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+
             // Kiểm tra xem người dùng có tồn tại không
-            if (user == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(404).body(response);
             }
-
-            user = userService.findById(id);
-            if (user == null) {
-                response.put("message", "Người dùng không tồn tại");
-                return ResponseEntity.status(404).body(response);
-            }
-
 
             String username = request.getUsername();
             String phone = request.getPhone();
             String email = request.getEmail();
             Role role = request.getRole();
-
 
             // kiểm tra validation
             if (username == null || phone == null || email == null || role == null || username.isEmpty() || phone.isEmpty() || email.isEmpty()) {
@@ -505,13 +513,38 @@ public class UserController {
                 return ResponseEntity.status(400).body(response);
             }
 
-            // Gọi UserService để cập nhật thông tin user
-            userService.updateInfoAccount(user, username, phone, email, role);
-            response.put("message", "Cập nhật thông tin tài khoản thành công");
-            response.put("status", "success");
-            Map<String, Object> data = new HashMap<>();
-            data.put("user", userService.findById(user.getId()));
-            response.put("data", data);
+            if(userRole.equalsIgnoreCase("Customer")){
+                Customer customer = customerService.findById(id);
+                if (customer == null) {
+                    response.put("message", "Người dùng không tồn tại");
+                    return ResponseEntity.status(404).body(response);
+                }
+
+                // Gọi UserService để cập nhật thông tin user
+                customerService.updateInfoAccount(customer, username, phone, email);
+                response.put("message", "Cập nhật thông tin tài khoản thành công");
+                response.put("status", "success");
+                Map<String, Object> data = new HashMap<>();
+                data.put("customer", customerService.findById(customer.getId()));
+                response.put("data", data);
+            } else if (userRole.equalsIgnoreCase("Employee")) {
+                Employee employeeUpdate = employeeService.findById(id);
+                if (employeeUpdate == null) {
+                    response.put("message", "Người dùng không tồn tại");
+                    return ResponseEntity.status(404).body(response);
+                }
+
+                // Gọi UserService để cập nhật thông tin user
+                employeeService.updateInfoAccount(employeeUpdate, username, phone, email, role);
+                response.put("message", "Cập nhật thông tin tài khoản thành công");
+                response.put("status", "success");
+                Map<String, Object> data = new HashMap<>();
+                data.put("employee", employeeService.findById(employeeUpdate.getId()));
+                response.put("data", data);
+            } else {
+                response.put("message", "Vai trò người dùng không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -532,28 +565,28 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> getAllUsers(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || (user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(403).body(response);
             }
-            List<User> users = userService.getAllUsersByRole(Role.CUSTOMER);
+            List<Customer> customers = customerService.getAllCustomer();
             response.put("message", "Lấy danh sách khách hàng thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
-            List<User> usersRender = users.stream().map(u -> {
-                User userRender = new User();
-                userRender.setId(u.getId());
-                userRender.setUsername(u.getUsername());
-                userRender.setEmail(u.getEmail());
-                userRender.setRole(u.getRole());
-                userRender.setAvatarUrl(u.getAvatarUrl());
-                userRender.setPhone(u.getPhone());
-                userRender.setCreatedAt(u.getCreatedAt());
-                userRender.setActive(u.isActive());
-                userRender.setEnabled(u.isEnabled());
-                return userRender;
+            List<Customer> usersRender = customers.stream().map(u -> {
+                Customer customerRender = new Customer();
+                customerRender.setId(u.getId());
+                customerRender.setUsername(u.getUsername());
+                customerRender.setEmail(u.getEmail());
+                customerRender.setRole(u.getRole());
+                customerRender.setAvatarUrl(u.getAvatarUrl());
+                customerRender.setPhone(u.getPhone());
+                customerRender.setCreatedAt(u.getCreatedAt());
+                customerRender.setActive(u.isActive());
+                customerRender.setEnabled(u.isEnabled());
+                return customerRender;
             }).toList();
             data.put("users", usersRender);
 
@@ -574,29 +607,28 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> getStaffAndManagers(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || (user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(403).body(response);
             }
-            List<User> users = userService.getAllUsersByRole(Role.STAFF);
-            users.addAll(userService.getAllUsersByRole(Role.MANAGER));
+            List<Employee> employees = employeeService.findAll();
             response.put("message", "Lấy danh sách nhân viên và quản lý thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
-            List<User> usersRender = users.stream().map(u -> {
-                User userRender = new User();
-                userRender.setId(u.getId());
-                userRender.setUsername(u.getUsername());
-                userRender.setEmail(u.getEmail());
-                userRender.setRole(u.getRole());
-                userRender.setAvatarUrl(u.getAvatarUrl());
-                userRender.setPhone(u.getPhone());
-                userRender.setCreatedAt(u.getCreatedAt());
-                userRender.setActive(u.isActive());
-                userRender.setEnabled(u.isEnabled());
-                return userRender;
+            List<Employee> usersRender = employees.stream().map(u -> {
+                Employee employeeRender = new Employee();
+                employeeRender.setId(u.getId());
+                employeeRender.setUsername(u.getUsername());
+                employeeRender.setEmail(u.getEmail());
+                employeeRender.setRole(u.getRole());
+                employeeRender.setAvatarUrl(u.getAvatarUrl());
+                employeeRender.setPhone(u.getPhone());
+                employeeRender.setCreatedAt(u.getCreatedAt());
+                employeeRender.setActive(u.isActive());
+//                customerRender.setEnabled(u.isEnabled());
+                return employeeRender;
             }).toList();
             data.put("users", usersRender);
 
@@ -616,15 +648,15 @@ public class UserController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user == null || user.getRole() != Role.MANAGER) {
+            if (employee == null || employee.getRole() != Role.MANAGER) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(404).body(response);
             }
 
-            user = userService.findById(id);
-            if (user == null) {
+            Employee employeeUpdate = employeeService.findById(id);
+            if (employeeUpdate == null) {
                 response.put("message", "Người dùng không tồn tại");
                 return ResponseEntity.status(404).body(response);
             }
@@ -635,12 +667,12 @@ public class UserController {
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
-            user.setActive(isActive);
-            userService.save(user);
+            employeeUpdate.setActive(isActive);
+            employeeService.save(employeeUpdate);
             response.put("message", "Cập nhật trạng thái tài khoản thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
-            data.put("user", userService.findById(user.getId()));
+            data.put("user", employeeService.findById(employeeUpdate.getId()));
             response.put("data", data);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

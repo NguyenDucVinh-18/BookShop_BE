@@ -1,9 +1,8 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
 import org.springframework.stereotype.Service;
-import vn.edu.iuh.fit.bookshop_be.dtos.AddressRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Address;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.repositories.AddressRepository;
 
 import java.util.List;
@@ -32,12 +31,12 @@ public class AddressService {
         return false;
     }
 
-    public List<Address> findByUser(User user) {
-        return addressRepository.findByUser(user);
+    public List<Address> findByCustomer(Customer customer) {
+        return addressRepository.findByCustomer(customer);
     }
 
-    public Address findByIdAndUser(Integer id, User user) {
-        return addressRepository.findByIdAndUser(id, user);
+    public Address findByIdAndUser(Integer id, Customer customer) {
+        return addressRepository.findByIdAndCustomer(id, customer);
     }
 
 

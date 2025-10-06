@@ -12,8 +12,8 @@ public class Cart {
     private Integer id;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -37,12 +37,12 @@ public class Cart {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Customer getUser() {
+        return customer;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(Customer customer) {
+        this.customer = customer;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -6,32 +6,30 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import vn.edu.iuh.fit.bookshop_be.dtos.CategoryRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductRequest;
-import vn.edu.iuh.fit.bookshop_be.models.Category;
-import vn.edu.iuh.fit.bookshop_be.models.Product;
-import vn.edu.iuh.fit.bookshop_be.models.Role;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.services.CategoryService;
+import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 import vn.edu.iuh.fit.bookshop_be.services.ProductService;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/product")
 public class ProductController {
     private final ProductService productService;
-    private final UserService userService;
+    private final CustomerService customerService;
+    private final EmployeeService employeeService;
     private final CategoryService categoryService;
     private final Cloudinary cloudinary;
 
 
-    public ProductController(ProductService productService, UserService userService, CategoryService categoryService, Cloudinary cloudinary) {
+    public ProductController(ProductService productService, CustomerService customerService, EmployeeService employeeService, CategoryService categoryService, Cloudinary cloudinary) {
         this.productService = productService;
-        this.userService = userService;
+        this.customerService = customerService;
+        this.employeeService = employeeService;
         this.categoryService = categoryService;
         this.cloudinary = cloudinary;
     }
@@ -51,15 +49,15 @@ public class ProductController {
     ){
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
 
-            if (user == null ) {
+            if (employee == null ) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để tạo sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -214,13 +212,13 @@ public class ProductController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -257,13 +255,13 @@ public class ProductController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -483,13 +481,13 @@ public class ProductController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để xóa ảnh khỏi sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa ảnh khỏi sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -531,13 +529,13 @@ public class ProductController {
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
-            if (user == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để thêm ảnh vào sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền thêm ảnh vào sản phẩm");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

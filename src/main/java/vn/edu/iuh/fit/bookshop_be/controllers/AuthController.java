@@ -1,32 +1,31 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 import vn.edu.iuh.fit.bookshop_be.dtos.CreateAccountRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.LoginRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
-import vn.edu.iuh.fit.bookshop_be.dtos.UpdateInfoRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
-import vn.edu.iuh.fit.bookshop_be.models.User;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
-import vn.edu.iuh.fit.bookshop_be.services.UserService;
+import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
+import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final UserService userService;
+    private final CustomerService customerService;
+    private final EmployeeService employeeService;
     private final JwtUtil jwtUtil;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
-        this.userService = userService;
+    public AuthController(CustomerService customerService, EmployeeService employeeService, JwtUtil jwtUtil) {
+        this.customerService = customerService;
+        this.employeeService = employeeService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -50,13 +49,13 @@ public class AuthController {
                 response.put("message", "Số điện thoại không hợp lệ");
                 return ResponseEntity.status(400).body(response);
             }
-            if(userService.findByEmail(request.getEmail()) != null){
+            if(customerService.findByEmail(request.getEmail()) != null){
                 response.put("message" , "Email đã tồn tại");
                 return ResponseEntity.status(400).body(response);
             }
 
             // Gọi UserService để đăng kí user
-            userService.signUp(request);
+            customerService.signUp(request);
             response.put("message" , "Đăng kí tài khoản thành công");
             response.put("status" , "success");
             Map<String, Object> data = new HashMap<>();
@@ -87,17 +86,17 @@ public class AuthController {
                 response.put("message", "Email không được bỏ trống");
                 return ResponseEntity.status(400).body(response);
             }
-            System.out.println(email);
-            User user = userService.findByEmail(email);
-            if (user == null) {
+
+            Customer customer = customerService.findByEmail(email);
+            if (customer == null) {
                 response.put("message", "Không tìm thấy người dùng với email đã cho");
                 return ResponseEntity.status(404).body(response);
             }
-            if (user.isEnabled()) {
+            if (customer.isEnabled()) {
                 response.put("message", "Tài khoản đã được xác thực");
                 return ResponseEntity.status(400).body(response);
             }
-            userService.sendVerificationEmail(email, user.getVerificationCode());
+            customerService.sendVerificationEmail(email, customer.getVerificationCode());
 
             response.put("message", "Gửi lại email xác thực thành công. Vui lòng kiểm tra email của bạn.");
             response.put("status", "success");
@@ -120,12 +119,12 @@ public class AuthController {
     @GetMapping("/verify")
     public RedirectView verifyUser(@RequestParam("code") String verificationCode) {
         try{
-            User existingUser = userService.findByVerificationCode(verificationCode);
-            boolean verified = userService.verifyUser(verificationCode);
+            Customer existingCustomer = customerService.findByVerificationCode(verificationCode);
+            boolean verified = customerService.verifyUser(verificationCode);
             String redirectUrl;
 
             if (verified) {
-                String token = jwtUtil.generateAccessToken(existingUser.getEmail(), Role.CUSTOMER.toString());
+                String token = jwtUtil.generateAccessToken(existingCustomer.getEmail(), Role.CUSTOMER.toString());
 
                 // Redirect về FE kèm token trên URL
                 redirectUrl = "http://localhost:5173/verify-success?token=" + token;
@@ -142,52 +141,115 @@ public class AuthController {
 
 
     /**
-     * Đăng nhập
+     * Đăng nhập tài khoản khach hàng
      * @param request
      * @return ResponseEntity với thông tin kết quả
      */
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(request.getPassword());
+    @PostMapping("/loginCustomer")
+    public ResponseEntity<Map<String, Object>> loginCustomer(@RequestBody LoginRequest request) {
+        Customer customer = new Customer();
+        customer.setEmail(request.getEmail());
+        customer.setPasswordHash(request.getPassword());
+
         Map<String, Object> response = new HashMap<>();
         try {
             // kiểm tra username hoặc password có bị null không
-            if (user.getEmail() == null || user.getPasswordHash() == null) {
+            if (customer.getEmail() == null || customer.getPasswordHash() == null) {
                 response.put("message" , "Tài khoản và mật khẩu không được bỏ trống");
                 return ResponseEntity.status(400).body(response);
             }
             // kiểm tra user có trong db không
-            User existingUser = userService.findByEmail(user.getEmail());
-
-            if (existingUser == null) {
+            Customer existingCustomer = customerService.findByEmail(customer.getEmail());
+            if (existingCustomer == null) {
                 response.put("message" , "Tài khoản hoặc mật khẩu không chính xác");
                 return ResponseEntity.status(401).body(response);
             }
 
-            if (userService.checkPassword(user.getPasswordHash(), existingUser.getPasswordHash())) {
-                String accessToken = jwtUtil.generateAccessToken(existingUser.getEmail() , existingUser.getRole().toString());
-                String refreshToken = jwtUtil.generateRefreshToken(existingUser.getEmail());
+            if (customerService.checkPassword(customer.getPasswordHash(), existingCustomer.getPasswordHash())) {
+                String accessToken = jwtUtil.generateAccessToken(existingCustomer.getEmail() , existingCustomer.getRole().toString());
+                String refreshToken = jwtUtil.generateRefreshToken(existingCustomer.getEmail());
                 Map<String, String> tokens = new HashMap<>();
                 tokens.put("accessToken", accessToken);
                 tokens.put("refreshToken", refreshToken);
 
                 // Tạo map user để chứa thông tin người dùng
                 Map<String, Object> userInfo = new HashMap<>();
-                userInfo.put("username", existingUser.getUsername());
-                userInfo.put("email", existingUser.getEmail());
-                userInfo.put("id", existingUser.getId());
-                userInfo.put("avatar", existingUser.getAvatarUrl());
-                userInfo.put("role", existingUser.getRole());
-                userInfo.put("phone", existingUser.getPhone());
-                userInfo.put("isEnabled", existingUser.isEnabled());
+                userInfo.put("username", existingCustomer.getUsername());
+                userInfo.put("email", existingCustomer.getEmail());
+                userInfo.put("id", existingCustomer.getId());
+                userInfo.put("avatar", existingCustomer.getAvatarUrl());
+                userInfo.put("role", existingCustomer.getRole());
+                userInfo.put("phone", existingCustomer.getPhone());
+                userInfo.put("isEnabled", existingCustomer.isEnabled());
 
                 response.put("message", "Đăng nhập thành công");
                 response.put("status", "success");
                 Map<String, Object> data = new HashMap<>();
                 data.put("tokens", tokens);
-                data.put("user", userInfo);
+                data.put("customer", userInfo);
+
+                response.put("data", data);
+
+
+                return ResponseEntity.ok(response);
+
+            } else {
+                response.put("message","Lỗi đăng nhập. Tài khoản hoặc mật khẩu không chính xác");
+                return ResponseEntity.status(401).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message" , e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Đăng nhập tài khoản nhân viên
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PostMapping("/loginEmployee")
+    public ResponseEntity<Map<String, Object>> loginEmployee(@RequestBody LoginRequest request) {
+        Employee employee = new Employee();
+        employee.setEmail(request.getEmail());
+        employee.setPasswordHash(request.getPassword());
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // kiểm tra username hoặc password có bị null không
+            if (employee.getEmail() == null || employee.getPasswordHash() == null) {
+                response.put("message" , "Tài khoản và mật khẩu không được bỏ trống");
+                return ResponseEntity.status(400).body(response);
+            }
+            // kiểm tra user có trong db không
+            Employee existingEmployee = employeeService.findByEmail(employee.getEmail());
+
+            if (existingEmployee == null) {
+                response.put("message" , "Tài khoản hoặc mật khẩu không chính xác");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            if (employeeService.checkPassword(employee.getPasswordHash(), existingEmployee.getPasswordHash())) {
+                String accessToken = jwtUtil.generateAccessToken(existingEmployee.getEmail() , existingEmployee.getRole().toString());
+                String refreshToken = jwtUtil.generateRefreshToken(existingEmployee.getEmail());
+                Map<String, String> tokens = new HashMap<>();
+                tokens.put("accessToken", accessToken);
+                tokens.put("refreshToken", refreshToken);
+
+                // Tạo map user để chứa thông tin người dùng
+                Map<String, Object> userInfo = new HashMap<>();
+                userInfo.put("username", existingEmployee.getUsername());
+                userInfo.put("email", existingEmployee.getEmail());
+                userInfo.put("id", existingEmployee.getId());
+                userInfo.put("avatar", existingEmployee.getAvatarUrl());
+                userInfo.put("role", existingEmployee.getRole());
+                userInfo.put("phone", existingEmployee.getPhone());
+                userInfo.put("isActive", existingEmployee.isActive());
+
+                response.put("message", "Đăng nhập thành công");
+                response.put("status", "success");
+                Map<String, Object> data = new HashMap<>();
+                data.put("tokens", tokens);
+                data.put("employee", userInfo);
 
                 response.put("data", data);
 
@@ -213,28 +275,64 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> getUserInfo(@RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user == null) {
+            if (customer == null && employee == null) {
                 response.put("message", "Người dùng không tồn tại");
                 return ResponseEntity.status(404).body(response);
             }
+            if (customer != null) {
+                // Trả về thông tin người dùng
+                response.put("message", "Lấy thông tin người dùng thành công");
+                response.put("status", "success");
+                Customer customerRender = new Customer();
+                customerRender.setId(customer.getId());
+                customerRender.setUsername(customer.getUsername());
+                customerRender.setEmail(customer.getEmail());
+                customerRender.setRole(customer.getRole());
+                customerRender.setAvatarUrl(customer.getAvatarUrl());
+                customerRender.setPhone(customer.getPhone());
+
+                Map<String, Object> data = new HashMap<>();
+                data.put("user", customerRender);
+                response.put("data", data);
+            } else {
+                // Trả về thông tin nhân viên
+                response.put("message", "Lấy thông tin nhân viên thành công");
+                response.put("status", "success");
+                Employee employeeRender = new Employee();
+                employeeRender.setId(employee.getId());
+                employeeRender.setUsername(employee.getUsername());
+                employeeRender.setEmail(employee.getEmail());
+                employeeRender.setRole(employee.getRole());
+                employeeRender.setAvatarUrl(employee.getAvatarUrl());
+                employeeRender.setPhone(employee.getPhone());
+
+                Map<String, Object> data = new HashMap<>();
+                data.put("user", employeeRender);
+                response.put("data", data);
+            }
+
+
+
+
 
             // Trả về thông tin người dùng
-//            Map<String, Object> userInfo = new HashMap<>();
-            response.put("message", "Lấy thông tin người dùng thành công");
-            response.put("status", "success");
-            User userRender = new User();
-            userRender.setId(user.getId());
-            userRender.setUsername(user.getUsername());
-            userRender.setEmail(user.getEmail());
-            userRender.setRole(user.getRole());
-            userRender.setAvatarUrl(user.getAvatarUrl());
-            userRender.setPhone(user.getPhone());
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("user", userRender);
-            response.put("data", data);
+////           Map<String, Object> userInfo = new HashMap<>();
+//            response.put("message", "Lấy thông tin người dùng thành công");
+//            response.put("status", "success");
+//            Customer customerRender = new Customer();
+//            customerRender.setId(customer.getId());
+//            customerRender.setUsername(customer.getUsername());
+//            customerRender.setEmail(customer.getEmail());
+//            customerRender.setRole(customer.getRole());
+//            customerRender.setAvatarUrl(customer.getAvatarUrl());
+//            customerRender.setPhone(customer.getPhone());
+//
+//            Map<String, Object> data = new HashMap<>();
+//            data.put("user", customerRender);
+//            response.put("data", data);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -249,27 +347,27 @@ public class AuthController {
      * @param authHeader
      * @return ResponseEntity với thông tin kết quả
      */
-    @PostMapping("/createAccount")
-    public ResponseEntity<Map<String, Object>> addUser(
+    @PostMapping("/createAccountCustomer")
+    public ResponseEntity<Map<String, Object>> createAccountCustomer(
             @RequestBody CreateAccountRequest request,
             @RequestHeader("Authorization") String authHeader
     ) {
         Map<String, Object> response = new HashMap<>();
         try {
-            User user = userService.getUserByToken(authHeader);
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
             // Kiểm tra xem người dùng có tồn tại không
-            if (user.getRole() == null || ( user.getRole() != Role.STAFF && user.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("message", "Bạn không có quyền thực hiện hành động này");
                 return ResponseEntity.status(403).body(response);
             }
             // kiểm tra validation
-            if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null || request.getPhone() == null || request.getRole() == null) {
+            if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null || request.getPhone() == null) {
                 response.put("message", "Điền đầy đủ thông tin");
                 return ResponseEntity.status(400).body(response);
             }
 
-            if(userService.findByEmail(request.getEmail()) != null){
-                response.put("message", "Email đã tồn tại");
+            if(customerService.findByEmail(request.getEmail()) != null){
+                response.put("message", "Email khách hàng đã tồn tại");
                 return ResponseEntity.status(400).body(response);
             }
 
@@ -285,11 +383,11 @@ public class AuthController {
             }
 
             // Gọi UserService để đăng kí user
-            userService.createAccount(request.getUsername(), request.getEmail(), request.getPassword(), request.getPhone(), request.getRole());
-            response.put("message", "Thêm tài khoản thành công");
+            customerService.createAccountCustomer(request.getUsername(), request.getEmail(), request.getPassword(), request.getPhone());
+            response.put("message", "Thêm tài khoản khách hàng thành công");
             response.put("status", "success");
             Map<String, Object> data = new HashMap<>();
-            data.put("user", request);
+            data.put("customer", request);
             response.put("data", data);
 
             return ResponseEntity.ok(response);
@@ -301,6 +399,62 @@ public class AuthController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @PostMapping("/createAccountEmployee")
+    public ResponseEntity<Map<String, Object>> createAccountEmployee(
+            @RequestBody CreateAccountRequest request,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            // Kiểm tra xem người dùng có tồn tại không
+            if (employee.getRole() != Role.MANAGER) {
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(403).body(response);
+            }
+            // kiểm tra validation
+            if (request.getEmail() == null || request.getUsername() == null || request.getPassword() == null || request.getPhone() == null || request.getRole() == null) {
+                response.put("message", "Điền đầy đủ thông tin");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            if(employeeService.findByEmail(request.getEmail()) != null){
+                response.put("message", "Email nhân viên đã tồn tại");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            if(request.getEmail() != null && !request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                response.put("message", "Email không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            //kiem tra so dien thoai
+            if (request.getPhone() != null && !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")) {
+                response.put("message", "Số điện thoại không hợp lệ");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            // Gọi UserService để đăng kí user
+            employeeService.createAccountEmployee(request.getUsername(), request.getEmail(), request.getPassword(), request.getPhone(), request.getRole());
+            response.put("message", "Thêm tài khoản nhân viên thành công");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            data.put("employee", request);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+
 
 
 
