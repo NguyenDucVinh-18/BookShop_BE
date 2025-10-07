@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,10 @@ public class Employee {
 //
 //    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
 //    private List<Message> receivedMessages;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Message> messages;
 
     @Column(name = "is_active")
     private boolean isActive;
@@ -90,5 +95,13 @@ public class Employee {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<Message> messages) {
+        this.messages = messages;
     }
 }

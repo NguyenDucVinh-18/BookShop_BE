@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,12 +35,15 @@ public class Customer {
     private String phone;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Address> addresses;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Cart cart;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Order> orders;
 
 //    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
@@ -49,6 +53,7 @@ public class Customer {
 //    private List<Message> receivedMessages;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ProductReview> productReviews;
 
     @Column(name = "verification_code", length = 64)
@@ -59,6 +64,10 @@ public class Customer {
 
     @Column(name = "is_active")
     private boolean isActive;
+
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Conversation conversation;
 
     public Customer() {}
 
@@ -137,5 +146,13 @@ public class Customer {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public Conversation getConversation() {
+        return conversation;
+    }
+
+    public void setConversation(Conversation conversation) {
+        this.conversation = conversation;
     }
 }
