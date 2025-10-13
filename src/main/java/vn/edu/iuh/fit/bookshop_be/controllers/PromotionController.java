@@ -1,12 +1,14 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.PromotionRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Promotion;
-import vn.edu.iuh.fit.bookshop_be.models.Customer;
+import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 import vn.edu.iuh.fit.bookshop_be.services.PromotionService;
 import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
@@ -28,6 +30,9 @@ public class PromotionController {
         this.employeeService = employeeService;
     }
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     /**
      * Tạo khuyến mãi mới
      * @param authHeader
@@ -41,6 +46,7 @@ public class PromotionController {
             @RequestBody PromotionRequest request
     ) {
         Promotion promotion = new Promotion();
+        promotion.setName(request.getName());
         promotion.setCode(request.getCode());
         promotion.setDescription(request.getDescription());
         promotion.setDiscountPercent(request.getDiscountPercent());
@@ -56,7 +62,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!employee.getRole().equals("MANAGER")) {
+            if (employee.getRole() == null || employee.getRole() != Role.MANAGER) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền tạo khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -87,7 +93,20 @@ public class PromotionController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
+            if(promotion.getEndDate().isBefore(java.time.LocalDate.now())) {
+                response.put("status", "error");
+                response.put("message", "Ngày kết thúc phải sau ngày hiện tại");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
             // Tạo khuyến mãi
+            if(promotion.getStartDate().isBefore(java.time.LocalDate.now()) && promotion.getEndDate().isAfter(java.time.LocalDate.now())) {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.ACTIVE);
+            } else if (promotion.getStartDate().isBefore(java.time.LocalDate.now()) && promotion.getEndDate().isBefore(java.time.LocalDate.now())) {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.EXPIRED);
+            } else {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.INACTIVE);
+            }
             Promotion createdPromotion = promotionService.createPromotion(promotion);
 
             response.put("status", "success");
@@ -124,7 +143,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!employee.getRole().equals("MANAGER")) {
+            if (employee.getRole() == null || employee.getRole() != Role.MANAGER) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy danh sách tất cả khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -170,7 +189,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!employee.getRole().equals("MANAGER")) {
+            if (employee.getRole() == null || employee.getRole() != Role.MANAGER) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền lấy thông tin khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -221,7 +240,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!employee.getRole().equals("MANAGER")) {
+            if (employee.getRole() == null || employee.getRole() != Role.MANAGER) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -234,6 +253,7 @@ public class PromotionController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
+            promotion.setName(request.getName());
             promotion.setCode(request.getCode());
             promotion.setDescription(request.getDescription());
             promotion.setDiscountPercent(request.getDiscountPercent());
@@ -263,6 +283,21 @@ public class PromotionController {
                 response.put("status", "error");
                 response.put("message", "Ngày bắt đầu phải trước ngày kết thúc");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            if(promotion.getEndDate().isBefore(java.time.LocalDate.now())) {
+                response.put("status", "error");
+                response.put("message", "Ngày kết thúc phải sau ngày hiện tại");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            // Tạo khuyến mãi
+            if(promotion.getStartDate().isBefore(java.time.LocalDate.now()) && promotion.getEndDate().isAfter(java.time.LocalDate.now())) {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.ACTIVE);
+            } else if (promotion.getStartDate().isBefore(java.time.LocalDate.now()) && promotion.getEndDate().isBefore(java.time.LocalDate.now())) {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.EXPIRED);
+            } else {
+                promotion.setStatus(vn.edu.iuh.fit.bookshop_be.models.PromotionStatus.INACTIVE);
             }
 
             // Cập nhật khuyến mãi
@@ -304,7 +339,7 @@ public class PromotionController {
             }
 
             // Kiểm tra quyền của người dùng
-            if (!employee.getRole().equals("MANAGER")) {
+            if (employee.getRole() == null || employee.getRole() != Role.MANAGER) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền xóa khuyến mãi");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

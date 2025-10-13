@@ -47,7 +47,7 @@ public class CategoryService{
         Category category = getCategoryById(id);
         if (category != null) {
             category.getSubCategories().forEach(sub -> deleteCategoryWithSubCategories(sub.getId()));
-            categoryRepository.delete(category); // repository là JpaRepository<Category, Integer>
+            categoryRepository.delete(category);
         }
     }
 

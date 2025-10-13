@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class PromotionRequest {
+    private String name;
     private String code;
     private String description;
     private Double discountPercent;

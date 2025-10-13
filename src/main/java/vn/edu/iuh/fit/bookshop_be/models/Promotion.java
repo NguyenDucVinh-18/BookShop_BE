@@ -12,6 +12,9 @@ public class Promotion {
     @Column(name = "promotion_id")
     private Integer id;
 
+    @Column(name = "name")
+    private String name;
+
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
@@ -20,6 +23,10 @@ public class Promotion {
 
     @Column(name = "discount_percent")
     private Double discountPercent;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private PromotionStatus status;
 
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -54,5 +61,21 @@ public class Promotion {
 
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public PromotionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PromotionStatus status) {
+        this.status = status;
+    }
 }
 

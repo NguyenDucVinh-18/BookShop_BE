@@ -4,14 +4,18 @@ import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Promotion;
 import vn.edu.iuh.fit.bookshop_be.repositories.PromotionRepository;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 public class PromotionService {
     private final PromotionRepository promotionRepository;
+    private final NotificationService notificationService;
 
-    public PromotionService(PromotionRepository promotionRepository) {
+    public PromotionService(PromotionRepository promotionRepository, NotificationService notificationService) {
         this.promotionRepository = promotionRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Promotion> getAllPromotions() {
@@ -23,7 +27,20 @@ public class PromotionService {
                 .orElseThrow(() -> new RuntimeException("Promotion not found with id: " + id));
     }
 
+    private String formatDate(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return date.format(formatter);
+    }
+
+
     public Promotion createPromotion(Promotion promotion) {
+        notificationService.createNotification(
+                promotion.getName(),
+                "Hãy nhập code '"+ promotion.getCode() + "' để giảm " + promotion.getDiscountPercent() + "% hóa đơn từ ngày "
+                        + formatDate(promotion.getStartDate())
+                        + " đến ngày "
+                        + formatDate(promotion.getEndDate())
+        );
         return promotionRepository.save(promotion);
     }
 
@@ -32,7 +49,7 @@ public class PromotionService {
             promotion.setId(id);
             return promotionRepository.save(promotion);
         }
-        return null; // or throw an exception
+        return null;
     }
 
     public void deletePromotion(Integer id) {
@@ -42,6 +59,8 @@ public class PromotionService {
             throw new RuntimeException("Promotion not found with id: " + id);
         }
     }
+
+
 
 
 

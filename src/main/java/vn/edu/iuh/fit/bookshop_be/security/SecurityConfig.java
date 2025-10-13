@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/promotion/**").permitAll()
                         .requestMatchers("/api/product-review/**").permitAll()
                         .requestMatchers("/chat-websocket/**").permitAll()
+                        .requestMatchers("/api/notification/**").permitAll()
+
 
 
 
