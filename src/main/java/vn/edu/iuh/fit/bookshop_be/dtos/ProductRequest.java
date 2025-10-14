@@ -11,10 +11,12 @@ public class ProductRequest {
     private String productName;
     private String description;
     private BigDecimal price;
+    private Integer discountPercentage;
     private Integer stockQuantity;
     private String packageDimensions;
     private Integer weightGrams;
     private String productType;
+    private String supplierName;
     private Integer categoryId;
     private String publisherName;
     private Set<String> authors;

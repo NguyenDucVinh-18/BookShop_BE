@@ -14,6 +14,7 @@ import vn.edu.iuh.fit.bookshop_be.services.ProductService;
 import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
@@ -69,10 +70,14 @@ public class ProductController {
             product.setProductName(request.getProductName());
             product.setDescription(request.getDescription());
             product.setPrice(request.getPrice());
+            product.setDiscountPercentage(0); // Mặc định không có giảm giá
+            product.setPriceAfterDiscount(request.getPrice()); // Giá sau giảm giá ban đầu bằng giá gốc
             product.setStockQuantity(request.getStockQuantity());
             product.setPackageDimensions(request.getPackageDimensions());
             product.setWeightGrams(request.getWeightGrams());
             product.setProductType(request.getProductType());
+            product.setSupplierName(request.getSupplierName());
+
 
             // Kiểm tra và gán danh mục
             Category category = categoryService.findById(request.getCategoryId());
@@ -87,7 +92,6 @@ public class ProductController {
             product.setAuthorNames(request.getAuthors() != null ? request.getAuthors() : new HashSet<>());
             product.setPublicationYear(request.getPublicationYear());
             product.setPageCount(request.getPageCount());
-            product.setIsbn(request.getIsbn());
             product.setCoverType(request.getCoverType());
             product.setGradeLevel(request.getGradeLevel());
             product.setAgeRating(request.getAgeRating());
@@ -172,12 +176,14 @@ public class ProductController {
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
                 productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
                 productData.put("publisherName", product.getPublisherName());
                 productData.put("authorNames", product.getAuthorNames());
                 productData.put("publicationYear", product.getPublicationYear());
                 productData.put("pageCount", product.getPageCount());
-                productData.put("isbn", product.getIsbn());
                 productData.put("coverType", product.getCoverType());
                 productData.put("gradeLevel", product.getGradeLevel());
                 productData.put("ageRating", product.getAgeRating());
@@ -295,7 +301,6 @@ public class ProductController {
             product.setAuthorNames(request.getAuthors() != null ? request.getAuthors() : new HashSet<>());
             product.setPublicationYear(request.getPublicationYear());
             product.setPageCount(request.getPageCount());
-            product.setIsbn(request.getIsbn());
             product.setCoverType(request.getCoverType());
             product.setGradeLevel(request.getGradeLevel());
             product.setAgeRating(request.getAgeRating());
@@ -391,11 +396,13 @@ public class ProductController {
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
                 productData.put("categoryId", categoryId);
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
                 productData.put("publisherName", product.getPublisherName());
                 productData.put("authorNames", product.getAuthorNames());
                 productData.put("publicationYear", product.getPublicationYear());
                 productData.put("pageCount", product.getPageCount());
-                productData.put("isbn", product.getIsbn());
                 productData.put("coverType", product.getCoverType());
                 productData.put("gradeLevel", product.getGradeLevel());
                 productData.put("ageRating", product.getAgeRating());
@@ -451,6 +458,9 @@ public class ProductController {
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
                 // Chuyển đổi danh sách ảnh thành danh sách URL
                 List<String> imageUrls = new ArrayList<>(product.getImageUrls());
                 productData.put("imageUrls", imageUrls);
@@ -656,12 +666,14 @@ public class ProductController {
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
                 productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
                 productData.put("publisherName", product.getPublisherName());
                 productData.put("authorNames", product.getAuthorNames());
                 productData.put("publicationYear", product.getPublicationYear());
                 productData.put("pageCount", product.getPageCount());
-                productData.put("isbn", product.getIsbn());
                 productData.put("coverType", product.getCoverType());
                 productData.put("gradeLevel", product.getGradeLevel());
                 productData.put("ageRating", product.getAgeRating());
@@ -766,10 +778,12 @@ public class ProductController {
                 productData.put("productType", product.getProductType());
                 productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
                 productData.put("publisherName", product.getPublisherName());
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
                 productData.put("authorNames", product.getAuthorNames());
                 productData.put("publicationYear", product.getPublicationYear());
                 productData.put("pageCount", product.getPageCount());
-                productData.put("isbn", product.getIsbn());
                 productData.put("coverType", product.getCoverType());
                 productData.put("gradeLevel", product.getGradeLevel());
                 productData.put("ageRating", product.getAgeRating());
@@ -787,6 +801,57 @@ public class ProductController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi khi lấy danh sách sản phẩm theo danh mục: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PostMapping("/updateDiscountPercentage/{id}")
+    public ResponseEntity<Map<String, Object>> updateDiscountPercentage(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer id,
+            @RequestParam Integer discountPercentage
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để cập nhật phần trăm giảm giá");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền cập nhật phần trăm giảm giá");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            Product product = productService.findById(id);
+            if (product == null) {
+                response.put("status", "error");
+                response.put("message", "Sản phẩm không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            if (discountPercentage < 0 || discountPercentage > 100) {
+                response.put("status", "error");
+                response.put("message", "Phần trăm giảm giá phải từ 0 đến 100");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            product.setDiscountPercentage(discountPercentage);
+            // Cập nhật lại giá sau khi thay đổi phần trăm giảm giá
+            BigDecimal discountAmount = product.getPrice()
+                    .multiply(BigDecimal.valueOf(discountPercentage))
+                    .divide(BigDecimal.valueOf(100));
+            BigDecimal priceAfterDiscount = product.getPrice().subtract(discountAmount);
+            product.setPriceAfterDiscount(priceAfterDiscount);
+            productService.save(product);
+            response.put("status", "success");
+            response.put("message", "Cập nhật phần trăm giảm giá thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("product", product);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi cập nhật phần trăm giảm giá: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

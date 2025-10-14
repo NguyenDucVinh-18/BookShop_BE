@@ -17,7 +17,6 @@ public class Product {
     @Column(name = "product_id")
     private Integer id;
 
-
     @Column(name = "ProductName", nullable = false)
     private String productName;
 
@@ -28,6 +27,12 @@ public class Product {
     @Column(name = "Price", nullable = false)
     private BigDecimal price;
 
+    @Column(name = "discount_percentage")
+    private Integer discountPercentage;
+
+    @Column(name = "price_after_discount")
+    private BigDecimal priceAfterDiscount;
+
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
@@ -36,6 +41,9 @@ public class Product {
 
     @Column(name = "weight_grams")
     private Integer weightGrams;
+
+    @Column(name = "supplier_name")
+    private String supplierName;
 
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
@@ -75,9 +83,6 @@ public class Product {
     @Column(name = "page_count")
     private Integer pageCount;
 
-    @Column(name = "isbn")
-    private String isbn;
-
     @Column(name = "cover_type")
     private String coverType;
 
@@ -107,20 +112,27 @@ public class Product {
 
     public Product() {}
 
-    public Product(Integer id, Category category, String productName, String description, BigDecimal price, Integer stockQuantity, String packageDimensions, Integer weightGrams, String publisherName, Set<String> authorNames, String publicationYear, Integer pageCount, String isbn, String coverType, String gradeLevel, String ageRating, String genres, String color, String material, String manufacturingLocation, List<String> imageUrls, String productType, List<CartItem> cartItems, List<OrderItem> orderItems) {
+    public Product(Integer id, String productName, String description, BigDecimal price, Integer discountPercentage, BigDecimal priceAfterDiscount, Integer stockQuantity, String packageDimensions, Integer weightGrams, String supplierName, List<String> imageUrls, String productType, List<CartItem> cartItems, List<OrderItem> orderItems, Category category, List<ProductReview> productReviews, String publisherName, Set<String> authorNames, String publicationYear, Integer pageCount, String coverType, String gradeLevel, String ageRating, String genres, String color, String material, String manufacturingLocation) {
         this.id = id;
-        this.category = category;
         this.productName = productName;
         this.description = description;
         this.price = price;
+        this.discountPercentage = discountPercentage;
+        this.priceAfterDiscount = priceAfterDiscount;
         this.stockQuantity = stockQuantity;
         this.packageDimensions = packageDimensions;
         this.weightGrams = weightGrams;
+        this.supplierName = supplierName;
+        this.imageUrls = imageUrls;
+        this.productType = productType;
+        this.cartItems = cartItems;
+        this.orderItems = orderItems;
+        this.category = category;
+        this.productReviews = productReviews;
         this.publisherName = publisherName;
         this.authorNames = authorNames;
         this.publicationYear = publicationYear;
         this.pageCount = pageCount;
-        this.isbn = isbn;
         this.coverType = coverType;
         this.gradeLevel = gradeLevel;
         this.ageRating = ageRating;
@@ -128,10 +140,6 @@ public class Product {
         this.color = color;
         this.material = material;
         this.manufacturingLocation = manufacturingLocation;
-        this.imageUrls = imageUrls;
-        this.productType = productType;
-        this.cartItems = cartItems;
-        this.orderItems = orderItems;
     }
 
     public Integer getId() {
@@ -230,14 +238,6 @@ public class Product {
         this.pageCount = pageCount;
     }
 
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public void setIsbn(String isbn) {
-        this.isbn = isbn;
-    }
-
     public String getCoverType() {
         return coverType;
     }
@@ -332,5 +332,30 @@ public class Product {
 
     public void setProductReviews(List<ProductReview> productReviews) {
         this.productReviews = productReviews;
+    }
+
+
+    public Integer getDiscountPercentage() {
+        return discountPercentage;
+    }
+
+    public void setDiscountPercentage(Integer discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    public BigDecimal getPriceAfterDiscount() {
+        return priceAfterDiscount;
+    }
+
+    public void setPriceAfterDiscount(BigDecimal priceAfterDiscount) {
+        this.priceAfterDiscount = priceAfterDiscount;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 }
