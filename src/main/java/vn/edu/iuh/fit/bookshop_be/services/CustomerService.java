@@ -19,6 +19,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -263,6 +264,157 @@ public class CustomerService {
             throw new RuntimeException("Không thể gửi email xác thực: " + e.getMessage(), e);
         }
     }
+
+    public String sendResetPasswordOtp(String toEmail) {
+        try {
+            // 🔹 Tạo mã OTP 6 số ngẫu nhiên
+            String otp = String.format("%06d", new Random().nextInt(999999));
+
+            // 🔹 Nội dung plain text (phòng khi mail client không hỗ trợ HTML)
+            String plainText =
+                    "Xin chào,\n\n" +
+                            "Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản BookShop của mình.\n\n" +
+                            "Mã OTP của bạn là: " + otp + "\n\n" +
+                            "Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.\n\n" +
+                            "Trân trọng,\nBookShop Support";
+
+            // 🔹 Giao diện HTML đẹp, thân thiện
+            String htmlTemplate = """
+        <!doctype html>
+        <html lang="vi">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Mã OTP đặt lại mật khẩu</title>
+          <style>
+            body {
+              background: #f6f8fb;
+              margin: 0;
+              padding: 0;
+              font-family: Inter, Segoe UI, Arial, sans-serif;
+              color: #1f2937;
+            }
+            .container {
+              max-width: 560px;
+              margin: 0 auto;
+              padding: 24px;
+            }
+            .card {
+              background: #ffffff;
+              border-radius: 16px;
+              box-shadow: 0 6px 18px rgba(0,0,0,.06);
+              overflow: hidden;
+            }
+            .header {
+              background: linear-gradient(135deg, #06b6d4, #3b82f6);
+              padding: 24px;
+              color: #fff !important;
+            }
+            .brand {
+              font-size: 18px;
+              font-weight: 700;
+              letter-spacing: .4px;
+              color: #ffffff !important;
+            }
+            .content {
+              padding: 24px;
+              text-align: center;
+            }
+            .title {
+              font-size: 20px;
+              margin: 0 0 8px;
+              font-weight: bold;
+            }
+            .muted {
+              color: #6b7280;
+              margin: 0 0 20px;
+              line-height: 1.6;
+            }
+            .otp-box {
+              display: inline-block;
+              padding: 12px 24px;
+              background: #f0f9ff;
+              color: #1e40af;
+              font-size: 28px;
+              letter-spacing: 6px;
+              border-radius: 12px;
+              font-weight: 700;
+              border: 1px solid #93c5fd;
+            }
+            .footer {
+              padding: 16px 24px;
+              border-top: 1px solid #eef2f7;
+              color: #9ca3af;
+              font-size: 12px;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <!-- HEADER -->
+              <div class="header">
+                <div class="brand">📚 BookShop • Quên mật khẩu</div>
+              </div>
+
+              <!-- CONTENT -->
+              <div class="content">
+                <h1 class="title">Xin chào,</h1>
+                <p class="muted">
+                  Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản BookShop của mình.
+                </p>
+                <div class="otp-box">{{otp_code}}</div>
+                <p class="muted" style="margin-top:16px">
+                  Mã OTP có hiệu lực trong <strong>1 phút</strong>.<br>
+                  Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.
+                </p>
+              </div>
+
+              <!-- FOOTER -->
+              <div class="footer">
+                Email này được gửi tự động, vui lòng không trả lời.<br>
+                © 2025 BookShop. All rights reserved.
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+        """;
+
+            // 🔹 Thay placeholder bằng OTP thực tế
+            String html = htmlTemplate.replace("{{otp_code}}", otp);
+
+            // 🔹 Tạo và gửi mail
+            MimeMessage mime = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    mime,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    StandardCharsets.UTF_8.name()
+            );
+
+            helper.setTo(toEmail);
+            helper.setSubject("Mã OTP đặt lại mật khẩu");
+            if (fromEmail != null && !fromEmail.isBlank()) {
+                helper.setFrom(fromEmail);
+            }
+
+            // Ưu tiên HTML, fallback sang plain text
+            helper.setText(plainText, html);
+
+            mailSender.send(mime);
+
+            return otp; // 🔹 Trả về OTP để backend lưu hoặc so sánh sau này
+        } catch (MessagingException e) {
+            throw new RuntimeException("Không thể gửi email OTP: " + e.getMessage(), e);
+        }
+    }
+
+    public void resetPassword(Customer customer, String newPassword) {
+        customer.setPasswordHash(passwordEncoder.encode(newPassword));
+        customerRepository.save(customer);
+    }
+
 
     public boolean verifyUser(String verificationCode) {
         Customer customer = customerRepository.findByVerificationCode(verificationCode);;

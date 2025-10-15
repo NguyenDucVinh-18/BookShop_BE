@@ -30,6 +30,32 @@ public class AuthController {
     }
 
     /**
+     * Tìm kiếm người dùng theo email
+     * @param email
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @GetMapping("/findByEmail")
+    public ResponseEntity<Map<String, Object>> findByEmail(@RequestParam String email) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Customer customer = customerService.findByEmail(email);
+            if (customer == null) {
+                response.put("message", "Không tìm thấy người dùng với email đã cho");
+                return ResponseEntity.status(404).body(response);
+            }
+            response.put("message", "Tìm thấy người dùng với email đã cho");
+            response.put("status", "success");
+            Map<String, Object> data = new HashMap<>();
+            data.put("user", customer);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
      * Đăng ký tài khoản
      * @param request
      * @return ResponseEntity với thông tin kết quả
@@ -110,6 +136,111 @@ public class AuthController {
         }
     }
 
+    /**
+     * Gửi mã OTP để đặt lại mật khẩu
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PostMapping("/sendResetPasswordOtp")
+    public ResponseEntity<Map<String, String>> sendResetPasswordOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        Map<String, String> response = new HashMap<>();
+        try {
+            if (email == null || email.isEmpty()) {
+                response.put("message", "Email không được bỏ trống");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            Customer customer = customerService.findByEmail(email);
+            if (customer == null) {
+                response.put("message", "Không tìm thấy người dùng với email đã cho");
+                return ResponseEntity.status(404).body(response);
+            }
+            String otp = customerService.sendResetPasswordOtp(email);
+            customer.setVerificationCode(otp);
+            customerService.save(customer);
+            response.put("message", "Gửi mã thành công. Vui lòng kiểm tra email của bạn.");
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Đặt lại mật khẩu
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PostMapping("/resetPassword")
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+        String newPassword = request.get("newPassword");
+        Map<String, String> response = new HashMap<>();
+        try {
+            if (email == null || email.isEmpty() || otp == null || otp.isEmpty() || newPassword == null || newPassword.isEmpty()) {
+                response.put("message", "Email, mã OTP và mật khẩu mới không được bỏ trống");
+                return ResponseEntity.status(400).body(response);
+            }
+            Customer customer = customerService.findByEmail(email);
+            if (customer == null) {
+                response.put("message", "Không tìm thấy người dùng với email đã cho");
+                return ResponseEntity.status(404).body(response);
+            }
+            if (!otp.equals(customer.getVerificationCode())) {
+                response.put("message", "Mã OTP không đúng");
+                return ResponseEntity.status(400).body(response);
+            }
+            customerService.resetPassword(customer, newPassword);
+            response.put("message", "Đặt lại mật khẩu thành công");
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Xóa mã OTP sau khi đặt lại mật khẩu thành công
+     * @param request
+     * @return ResponseEntity với thông tin kết quả
+     */
+    @PostMapping("/removeResetPasswordOtp")
+    public ResponseEntity<Map<String, String>> removeResetPasswordOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        Map<String, String> response = new HashMap<>();
+        try {
+            if (email == null || email.isEmpty()) {
+                response.put("message", "Email không được bỏ trống");
+                return ResponseEntity.status(400).body(response);
+            }
+            Customer customer = customerService.findByEmail(email);
+            if (customer == null) {
+                response.put("message", "Không tìm thấy người dùng với email đã cho");
+                return ResponseEntity.status(404).body(response);
+            }
+            customer.setVerificationCode(null);
+            customerService.save(customer);
+            response.put("message", "Xóa mã OTP thành công");
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     /**
      * Xác thực tài khoản người dùng
