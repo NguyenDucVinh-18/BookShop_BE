@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
@@ -45,7 +46,7 @@ public class OrderService {
             }
             orderItem.setOrder(order);
             orderItem.setProduct(product);
-            orderItem.setPrice(product.getPrice());
+            orderItem.setPrice(product.getPriceAfterDiscount());
             orderItem.setQuantity(request.getQuantity());
             orderItem.setProductName(product.getProductName());
             if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
@@ -53,7 +54,7 @@ public class OrderService {
             } else {
                 orderItem.setProductImage("https://res.cloudinary.com/dzljcagp9/image/upload/v1756805790/default_product_image_fdywaa.png");
             }
-            totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+            totalAmount = totalAmount.add(product.getPriceAfterDiscount().multiply(BigDecimal.valueOf(request.getQuantity())));
             orderItems.add(orderItem);
 
             productService.updateProductStock(product, request.getQuantity());
@@ -88,7 +89,8 @@ public class OrderService {
     }
 
     public List<Order> findByCustomer(Customer customer) {
-        return orderRepository.findByCustomer(customer);
+        return orderRepository.findByCustomer(customer, Sort.by(Sort.Direction.DESC, "createdAt"));
+//        return orderRepository.findByCustomerOrderByCreatedAtDesc(customer);
     }
 
     public Order findById(Integer orderId) {
@@ -117,7 +119,7 @@ public class OrderService {
     }
 
     public List<Order> findAll() {
-        return orderRepository.findAll();
+        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     public Order findByIdAndUser(Integer id, Customer customer) {

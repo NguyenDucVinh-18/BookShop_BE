@@ -34,7 +34,7 @@ public class CartService {
             cartItem = new CartItem();
             cartItem.setProduct(product);
             cartItem.setCart(cart);
-            cartItem.setPrice(product.getPrice());
+//            cartItem.setPrice(product.getPrice());
             cartItem.setQuantity(quantity);
             cartItem.setProductName(product.getProductName());
             cart.setCount(cart.getCount() + 1);

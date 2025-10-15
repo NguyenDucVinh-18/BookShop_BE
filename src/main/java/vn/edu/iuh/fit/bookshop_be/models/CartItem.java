@@ -25,8 +25,8 @@ public class CartItem {
     @Column(name = "productName")
     private String productName;
 
-    @Column(name = "price")
-    private BigDecimal price;
+//    @Column(name = "price")
+//    private BigDecimal price;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
@@ -64,12 +64,12 @@ public class CartItem {
         this.productName = productName;
     }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
+//    public BigDecimal getPrice() {
+//        return price;
+//    }
+//
+//    public void setPrice(BigDecimal price) {
+//        this.price = price;
+//    }
 
 }

@@ -154,14 +154,14 @@ public class OrderController{
     {
         Map<String, Object> response = new HashMap<>();
         try {
-            Customer customer = customerService.getCustomerByToken(authHeader);
-            if (customer == null) {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (customer.getRole() == null || ( customer.getRole() != Role.STAFF && customer.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

@@ -177,7 +177,7 @@ public class CartController {
                 itemData.put("productName", cartItem.getProduct().getProductName());
                 itemData.put("productImage", cartItem.getProduct().getImageUrls());
                 itemData.put("quantity", cartItem.getQuantity());
-                itemData.put("price", cartItem.getPrice());
+//                itemData.put("price", cartItem.getPrice());
                 items.add(itemData);
             }
             data.put("items", items);
