@@ -60,6 +60,10 @@ public class PromotionService {
         }
     }
 
+    public Promotion findByCode(String code) {
+        return promotionRepository.findByCode(code);
+    }
+
 
 
 

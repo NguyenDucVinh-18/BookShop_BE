@@ -16,17 +16,18 @@ import java.util.UUID;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductService productService;
-
-    public OrderService(OrderRepository orderRepository, ProductService productService) {
+    private final PromotionService promotionService;
+    public OrderService(OrderRepository orderRepository, ProductService productService, PromotionService promotionService) {
         this.orderRepository = orderRepository;
         this.productService = productService;
+        this.promotionService = promotionService;
     }
 
     public Order save(Order order) {
         return orderRepository.save(order);
     }
 
-    public Order placeOrder(Customer customer, PaymentMethod paymentMethod, String address, String phone , String note, List<ProductOrderRequest> productOrderRequests) {
+    public Order placeOrder(Customer customer, PaymentMethod paymentMethod, String address, String phone , String note, List<ProductOrderRequest> productOrderRequests, String promotionCode) {
         Order order = new Order();
         order.setCustomer(customer);
         order.setPaymentMethod(paymentMethod);
@@ -59,7 +60,31 @@ public class OrderService {
 
             productService.updateProductStock(product, request.getQuantity());
         }
-        order.setTotalAmount(totalAmount);
+        if(totalAmount.compareTo(new BigDecimal("500000")) >= 0){
+            order.setShippingFee((BigDecimal.ZERO));
+        } else {
+            order.setShippingFee(new BigDecimal("30000"));
+        }
+        totalAmount = totalAmount.add(order.getShippingFee());
+        if(promotionCode != null && !promotionCode.isEmpty()){
+            Promotion promotion = promotionService.findByCode(promotionCode);
+            if (promotion == null) {
+                throw new RuntimeException("Promotion not found with code: " + promotionCode);
+            }
+            if(promotion.getStatus() != PromotionStatus.ACTIVE) {
+                throw new RuntimeException("Promotion is not active");
+            }
+            order.setPromotion(promotion);
+            order.setDiscountPercent(promotion.getDiscountPercent());
+            BigDecimal totalAmountAfterDiscount = totalAmount.subtract(
+                    totalAmount.multiply(BigDecimal.valueOf(promotion.getDiscountPercent())).divide(BigDecimal.valueOf(100))
+            );
+            order.setTotalAmount(totalAmountAfterDiscount);
+        } else {
+            order.setPromotion(null);
+            order.setDiscountPercent(0.0);
+            order.setTotalAmount(totalAmount);
+        }
         order.setOrderItems(orderItems);
         if (paymentMethod == PaymentMethod.COD){
             order.setPaymentStatus(null);

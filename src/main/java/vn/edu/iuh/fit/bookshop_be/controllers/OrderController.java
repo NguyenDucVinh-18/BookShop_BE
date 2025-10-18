@@ -81,7 +81,7 @@ public class OrderController{
 
             // Thực hiện đặt hàng
             Map<String, Object> data = new HashMap<>();
-            Order order = orderService.placeOrder(customer, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts());
+            Order order = orderService.placeOrder(customer, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts(), request.getPromotionCode());
             if(order.getPaymentMethod() == PaymentMethod.BANKING){
                 String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
                 data.put("vnpUrl", vnpUrl);

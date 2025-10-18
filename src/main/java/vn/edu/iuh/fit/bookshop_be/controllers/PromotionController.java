@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.PromotionRequest;
+import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.models.Employee;
 import vn.edu.iuh.fit.bookshop_be.models.Promotion;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
@@ -355,6 +356,45 @@ public class PromotionController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi khi xóa khuyến mãi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * Lấy thông tin khuyến mãi theo mã code
+     * @param authHeader
+     * @param code Mã code của khuyến mãi cần lấy thông tin
+     * @return ResponseEntity với thông tin khuyến mãi
+     */
+    @GetMapping("/getPromotionByCode/{code}")
+    public ResponseEntity<Map<String, Object>> getPromotionByCode(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String code
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (employee == null && customer == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để lấy thông tin khuyến mãi");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            Promotion promotion = promotionService.findByCode(code);
+            if (promotion == null) {
+                response.put("status", "error");
+                response.put("message", "Khuyến mãi không tồn tại");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            response.put("status", "success");
+            response.put("message", "Lấy thông tin khuyến mãi thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("promotion", promotion);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy thông tin khuyến mãi: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

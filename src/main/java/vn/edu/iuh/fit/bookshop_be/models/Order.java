@@ -19,6 +19,16 @@ public class Order {
     @JsonIgnore
     private Customer customer;
 
+    @ManyToOne
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
+
+    @Column(name = "discount_percent")
+    private Double discountPercent;
+
+    @Column(name = "shipping_fee")
+    private  BigDecimal shippingFee;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private OrderStatus status;
@@ -148,6 +158,30 @@ public class Order {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Promotion getPromotion() {
+        return promotion;
+    }
+
+    public void setPromotion(Promotion promotion) {
+        this.promotion = promotion;
+    }
+
+    public Double getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(Double discountPercent) {
+        this.discountPercent = discountPercent;
+    }
+
+    public BigDecimal getShippingFee() {
+        return shippingFee;
+    }
+
+    public void setShippingFee(BigDecimal shippingFee) {
+        this.shippingFee = shippingFee;
     }
 }
 
