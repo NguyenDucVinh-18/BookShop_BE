@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import vn.edu.iuh.fit.bookshop_be.repositories.EmployeeRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -34,9 +35,12 @@ public class DataInitializer implements CommandLineRunner {
             Category nuoiDayCon = new Category("NUÔI DẠY CON", "Danh mục nuôi dạy con");
             Category sachThieuNhi = new Category("SÁCH THIẾU NHI", "Danh mục sách thiếu nhi");
             Category tieuSuHoiKy = new Category("TIỂU SỬ - HỒI KÝ", "Danh mục tiểu sử - hồi ký");
-            Category giaoKhoa = new Category("GIÁO KHOA - THAM KHẢO", "Danh mục giáo khoa - tham khảo");
             Category sachNgoaiNgu = new Category("SÁCH HỌC NGOẠI NGỮ", "Danh mục sách học ngoại ngữ");
             Category dungCuHocSinh = new Category("DỤng cụ học sinh", "Dụng cụ học sinh");
+            Category butViet = new Category("BÚT - VIẾT", "Danh mục bút và viết");
+            Category dungCuVanPhong = new Category("DỤNG CỤ VĂN PHÒNG", "Danh mục dụng cụ văn phòng");
+            Category sachGiaoKhoa = new Category("SÁCH GIÁO KHOA", "Danh mục sách giáo khoa");
+            Category doNgheDenTruong = new Category("ĐỒ NGHỀ ĐẾN TRƯỜNG", "Dụng cụ học tập đến trường");
 
             // ==== DANH MỤC CON ====
             // Văn Học
@@ -76,12 +80,6 @@ public class DataInitializer implements CommandLineRunner {
             Category kinhTeHoiKy = new Category("Kinh Tế Hồi Ký", "Sách kinh tế hồi ký");
             Category ngheThuat = new Category("Nghệ Thuật - Giải Trí", "Sách nghệ thuật - giải trí");
 
-            // Giáo Khoa - Tham Khảo
-            Category sachGiaoKhoa = new Category("Sách Giáo Khoa", "Sách giáo khoa");
-            Category sachThamKhao = new Category("Sách Tham Khảo", "Sách tham khảo");
-            Category luyenThi = new Category("Luyện Thi THPT Quốc Gia", "Sách luyện thi THPT quốc gia");
-            Category mauGiao = new Category("Mẫu Giáo", "Sách mẫu giáo");
-
             // Sách Học Ngoại Ngữ
             Category tiengAnh = new Category("Tiếng Anh", "Sách học tiếng Anh");
             Category tiengNhat = new Category("Tiếng Nhật", "Sách học tiếng Nhật");
@@ -93,6 +91,44 @@ public class DataInitializer implements CommandLineRunner {
             Category gotButChi = new Category("Gọt Bút Chì", "Gọt bút chì");
             Category thuoc = new Category("Thước Học Sinh", "Thước");
             Category boDungCu = new Category("Bộ Dụng Cụ Học Tập", "Bộ dụng cụ học tập");
+
+            // ==== BÚT - VIẾT ====
+            Category butBi = new Category("Bút Bi - Ruột Bút Bi", "Bút bi và ruột bút bi");
+            Category butGel = new Category("Bút Gel - Bút Nước", "Bút gel và bút nước");
+            Category butMuc = new Category("Bút Mực - Bút Máy", "Bút mực và bút máy");
+            Category butDaQuang = new Category("Bút Dạ Quang", "Bút dạ quang");
+            Category butChi = new Category("Bút Chì - Ruột Bút Chì", "Bút chì và ruột bút chì");
+
+            // ==== DỤNG CỤ VĂN PHÒNG ====
+            Category biaFile = new Category("Bìa - File Hồ Sơ", "Bìa và file hồ sơ");
+            Category kepGiay = new Category("Kẹp Giấy - Kẹp Bướm", "Kẹp giấy và kẹp bướm");
+            Category bamKim = new Category("Đồ Bấm Kim - Kim Bấm - Gỡ Kim", "Đồ bấm kim, kim bấm và gỡ kim");
+            Category camBut = new Category("Cắm Bút - Bảng Tên", "Cắm bút và bảng tên");
+
+            // ==== SÁCH GIÁO KHOA ====
+            List<Category> sachGiaoKhoaList = new ArrayList<>();
+            for (int i = 1; i <= 12; i++) {
+                Category lop = new Category("Lớp " + i, "Sách giáo khoa lớp " + i);
+                lop.setParentCategory(sachGiaoKhoa);
+                sachGiaoKhoaList.add(lop);
+            }
+            sachGiaoKhoa.getSubCategories().addAll(sachGiaoKhoaList);
+
+            // ==== ĐỒ NGHỀ ĐẾN TRƯỜNG ====
+            Category capBaLo = new Category("Cặp - Ba Lô", "Cặp sách, ba lô học sinh");
+            Category mayTinh = new Category("Máy Tính", "Máy tính học sinh");
+            Category tapVo = new Category("Tập Vở", "Tập, vở học sinh");
+            Category baoTapBaoSach = new Category("Bao Tập - Bao Sách", "Bao tập, bao sách");
+            Category bangViet = new Category("Bảng Viết - Bông Lau Bảng", "Bảng viết, bông lau bảng");
+            Category phanHopDungPhan = new Category("Phấn - Hộp Đựng Phấn", "Phấn, hộp đựng phấn");
+
+            doNgheDenTruong.getSubCategories().addAll(List.of(
+                    capBaLo, mayTinh,  tapVo, baoTapBaoSach,
+                     bangViet, phanHopDungPhan
+            ));
+            List.of(capBaLo, mayTinh,  tapVo, baoTapBaoSach,
+                            bangViet, phanHopDungPhan)
+                    .forEach(c -> c.setParentCategory(doNgheDenTruong));
 
             // ==== LIÊN KẾT CHA - CON ====
             vanHoc.getSubCategories().addAll(List.of(tieuThuyet, truyenNgan, lightNovel, ngonTinh));
@@ -131,11 +167,6 @@ public class DataInitializer implements CommandLineRunner {
             kinhTeHoiKy.setParentCategory(tieuSuHoiKy);
             ngheThuat.setParentCategory(tieuSuHoiKy);
 
-            giaoKhoa.getSubCategories().addAll(List.of(sachGiaoKhoa, sachThamKhao, luyenThi, mauGiao));
-            sachGiaoKhoa.setParentCategory(giaoKhoa);
-            sachThamKhao.setParentCategory(giaoKhoa);
-            luyenThi.setParentCategory(giaoKhoa);
-            mauGiao.setParentCategory(giaoKhoa);
 
             sachNgoaiNgu.getSubCategories().addAll(List.of(tiengAnh, tiengNhat, tiengHoa, tiengHan));
             tiengAnh.setParentCategory(sachNgoaiNgu);
@@ -149,13 +180,31 @@ public class DataInitializer implements CommandLineRunner {
             thuoc.setParentCategory(dungCuHocSinh);
             boDungCu.setParentCategory(dungCuHocSinh);
 
+            butViet.getSubCategories().addAll(List.of(butBi, butGel, butMuc, butDaQuang, butChi));
+            butBi.setParentCategory(butViet);
+            butGel.setParentCategory(butViet);
+            butMuc.setParentCategory(butViet);
+            butDaQuang.setParentCategory(butViet);
+            butChi.setParentCategory(butViet);
+
+            dungCuVanPhong.getSubCategories().addAll(List.of(biaFile, kepGiay, bamKim, camBut));
+            biaFile.setParentCategory(dungCuVanPhong);
+            kepGiay.setParentCategory(dungCuVanPhong);
+            bamKim.setParentCategory(dungCuVanPhong);
+            camBut.setParentCategory(dungCuVanPhong);
+
+
+
             // ==== LƯU DATABASE ====
             categoryRepository.saveAll(List.of(
                     vanHoc, kinhTe, tamLyKyNangSong, nuoiDayCon,
-                    sachThieuNhi, tieuSuHoiKy, giaoKhoa,
-                    sachNgoaiNgu, dungCuHocSinh
+                    sachThieuNhi, tieuSuHoiKy,
+                    sachNgoaiNgu, dungCuHocSinh,
+                    butViet, dungCuVanPhong,
+                    sachGiaoKhoa, doNgheDenTruong
             ));
         }
+
 
         if (employeeRepository.count() == 0) {
             // Tạo tài khoản quản lý mặc định

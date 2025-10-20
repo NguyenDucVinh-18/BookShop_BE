@@ -98,4 +98,8 @@ public class EmployeeService {
         employee.setRole(role);
         return employeeRepository.save(employee);
     }
+
+    public Long countEmployees() {
+        return employeeRepository.count();
+    }
 }

@@ -22,5 +22,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("select o from Order o where o.id = ?1 and o.customer = ?2")
     Order findByIdAndCustomer(Integer id, Customer customer);
 
+    // tinh so luong ban cua tung san pham
+
+    @Query("SELECT SUM(oi.quantity) " +
+            "FROM OrderItem oi " +
+            "WHERE oi.product.id = ?1")
+    Long countTotalProductSold(Integer productId);
+
+
 
 }

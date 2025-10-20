@@ -70,6 +70,10 @@ public class ProductService {
         return productRepository.findByCategory_ParentCategory_CategoryNameAndCategory_CategoryName(parentName, categoryName);
     }
 
+    public Long countProducts() {
+        return productRepository.count();
+    }
+
 
 
 

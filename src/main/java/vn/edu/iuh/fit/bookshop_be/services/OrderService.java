@@ -150,4 +150,25 @@ public class OrderService {
     public Order findByIdAndUser(Integer id, Customer customer) {
         return orderRepository.findByIdAndCustomer(id, customer);
     }
+
+    public Double calculateTotalRevenue() {
+        List<Order> orders = orderRepository.findAll();
+        Double totalRevenue = 0.0;
+        for (Order order : orders) {
+            if (order.getStatus() == OrderStatus.DELIVERED) {
+                totalRevenue += order.getTotalAmount().doubleValue();
+            }
+        }
+        return totalRevenue;
+    }
+
+    public Long countOrders() {
+        return orderRepository.count();
+    }
+
+    //countTotalProductsSold
+    public Long countTotalProductSold(Integer productId) {
+        Long totalSold = orderRepository.countTotalProductSold(productId);
+        return totalSold != null ? totalSold : 0L;
+    }
 }
