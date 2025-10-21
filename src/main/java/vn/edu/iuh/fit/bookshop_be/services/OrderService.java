@@ -7,6 +7,7 @@ import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.repositories.OrderRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,8 +163,12 @@ public class OrderService {
         return totalRevenue;
     }
 
-    public Long countOrders() {
-        return orderRepository.count();
+    public Double calculateTotalRevenueBetween(LocalDate startDate, LocalDate endDate) {
+        return orderRepository.calculateTotalRevenueBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+    }
+
+    public Long countOrdersBetween(LocalDate startDate, LocalDate endDate) {
+        return orderRepository.countByOrderDateBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
     }
 
     //countTotalProductsSold
@@ -171,4 +176,12 @@ public class OrderService {
         Long totalSold = orderRepository.countTotalProductSold(productId);
         return totalSold != null ? totalSold : 0L;
     }
+
+    public Long countTotalProductSoldBetween(Integer productId, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay(); // bao gồm endDate
+        Long totalSold = orderRepository.countTotalProductSoldBetween(productId, startDateTime, endDateTime);
+        return totalSold != null ? totalSold : 0L;
+    }
+
 }

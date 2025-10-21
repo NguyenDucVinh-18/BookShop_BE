@@ -17,6 +17,7 @@ import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -468,6 +469,12 @@ public class CustomerService {
 
     public Long countCustomers() {
         return customerRepository.count();
+    }
+
+    public Long countCustomersBetween(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay(); // bao gồm cả endDate
+        return customerRepository.countCustomersBetween(startDateTime, endDateTime);
     }
 
 }
