@@ -856,4 +856,60 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/getByProductName/{productName}")
+    public ResponseEntity<Map<String, Object>> getProductsByName(
+            @PathVariable String productName
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Product> products = productService.findByProductNameLike(productName);
+            if (products.isEmpty()) {
+                response.put("status", "success");
+                response.put("message", "Không có sản phẩm nào với tên này");
+                response.put("data", Collections.emptyList());
+                return ResponseEntity.ok(response);
+            }
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách sản phẩm theo tên thành công");
+            List<Map<String, Object>> productList = new ArrayList<>();
+            for (Product product : products) {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("id", product.getId());
+                productData.put("productName", product.getProductName());
+                productData.put("description", product.getDescription());
+                productData.put("price", product.getPrice());
+                productData.put("stockQuantity", product.getStockQuantity());
+                productData.put("packageDimensions", product.getPackageDimensions());
+                productData.put("weightGrams", product.getWeightGrams());
+                productData.put("productType", product.getProductType());
+                productData.put("categoryId", product.getCategory() != null ? product.getCategory().getId() : null);
+                productData.put("publisherName", product.getPublisherName());
+                productData.put("supplierName", product.getSupplierName());
+                productData.put("discountPercentage", product.getDiscountPercentage());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
+                productData.put("authorNames", product.getAuthorNames());
+                productData.put("publicationYear", product.getPublicationYear());
+                productData.put("pageCount", product.getPageCount());
+                productData.put("coverType", product.getCoverType());
+                productData.put("gradeLevel", product.getGradeLevel());
+                productData.put("ageRating", product.getAgeRating());
+                productData.put("genres", product.getGenres());
+                productData.put("priceAfterDiscount", product.getPriceAfterDiscount());
+                // Chuyển đổi danh sách ảnh thành danh sách URL
+                List<String> imageUrls = new ArrayList<>(product.getImageUrls());
+                productData.put("imageUrls", imageUrls);
+                // Thêm vào danh sách sản phẩm
+                productList.add(productData);
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("products", productList);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách sản phẩm theo tên: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

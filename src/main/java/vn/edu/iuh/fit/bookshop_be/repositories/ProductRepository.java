@@ -26,5 +26,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("select p from Product p where p.category.parentCategory.slug = ?1 and p.category.slug = ?2")
     List<Product> findByCategory_ParentCategory_CategoryNameAndCategory_CategoryName(String parentSlug, String slug);
 
+    @Query("select p from Product p where p.productName like ?1")
+    List<Product> findByProductNameLike(String productName);
+
 
 }

@@ -45,7 +45,7 @@ public class ProductReview {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "product_review_media", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "media_url")
+    @Column(name = "media_url", length = 1000)
     private List<String> mediaUrls = new ArrayList<>();
 
     public ProductReview() {

@@ -74,6 +74,10 @@ public class ProductService {
         return productRepository.count();
     }
 
+    public List<Product> findByProductNameLike(String productName) {
+        return productRepository.findByProductNameLike("%" + productName + "%");
+    }
+
 
 
 
