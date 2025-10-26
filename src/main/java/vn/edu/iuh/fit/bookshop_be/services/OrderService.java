@@ -1,14 +1,18 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
+import vn.edu.iuh.fit.bookshop_be.dtos.ProductStockReceiptRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
+import vn.edu.iuh.fit.bookshop_be.repositories.InventoryRepository;
 import vn.edu.iuh.fit.bookshop_be.repositories.OrderRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +22,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductService productService;
     private final PromotionService promotionService;
-    public OrderService(OrderRepository orderRepository, ProductService productService, PromotionService promotionService) {
+    private final StockReceiptService stockReceiptService;
+    private final InventoryRepository inventoryRepository;
+
+
+    public OrderService(OrderRepository orderRepository, ProductService productService, PromotionService promotionService, StockReceiptService stockReceiptService, InventoryRepository inventoryRepository) {
         this.orderRepository = orderRepository;
         this.productService = productService;
         this.promotionService = promotionService;
+        this.stockReceiptService = stockReceiptService;
+        this.inventoryRepository = inventoryRepository;
     }
 
     public Order save(Order order) {
@@ -59,7 +69,7 @@ public class OrderService {
             totalAmount = totalAmount.add(product.getPriceAfterDiscount().multiply(BigDecimal.valueOf(request.getQuantity())));
             orderItems.add(orderItem);
 
-            productService.updateProductStock(product, request.getQuantity());
+//            productService.updateProductStock(product, request.getQuantity());
         }
         if(totalAmount.compareTo(new BigDecimal("500000")) >= 0){
             order.setShippingFee((BigDecimal.ZERO));
@@ -97,8 +107,23 @@ public class OrderService {
             order.setPaymentRef(uuid);
             order.setStatus(OrderStatus.UNPAID);
         }
+        Order savedOrder = orderRepository.save(order);
+        String orderCode = "ORD-" +
+                LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" +
+                String.format("%06d", savedOrder.getId());
 
-        return orderRepository.save(order);
+        savedOrder.setOrderCode(orderCode);
+        orderRepository.save(savedOrder);
+
+        for(ProductOrderRequest request : productOrderRequests){
+            Inventory inventory = inventoryRepository.findByProduct(productService.findById(request.getProductId())).orElse(null);
+            if (inventory != null) {
+                inventory.setProcessingQuantity(inventory.getProcessingQuantity() + request.getQuantity());
+                inventory.recalculateAvailable();
+                inventoryRepository.save(inventory);
+            }
+        }
+        return orderRepository.save(savedOrder);
     }
 
     public boolean checkProductQuantity(ProductOrderRequest request){
@@ -108,8 +133,12 @@ public class OrderService {
             throw new RuntimeException("Product not found with ID: " + productId);
         }
         Integer requestedQuantity = request.getQuantity();
-        if(product.getStockQuantity() < requestedQuantity) {
-            return false; // Not enough stock
+        Inventory inventory = inventoryRepository.findByProduct(product).orElse(null);
+        if (inventory == null) {
+            throw new RuntimeException("Inventory not found for product ID: " + productId);
+        }
+        if (requestedQuantity > inventory.getAvailableQuantity()) {
+            return false;
         }
         return true; // Enough stock
     }
@@ -127,7 +156,34 @@ public class OrderService {
     public Order updateOrderStatus(Integer orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+        if(order.getStatus() == OrderStatus.CANCELED){
+            throw new RuntimeException("Cannot update status of a canceled order");
+        }
+        if(order.getStatus() == OrderStatus.DELIVERED){
+            throw new RuntimeException("Cannot update status of a delivered order");
+        }
+        if(order.getStatus() == status){
+            throw new RuntimeException("Order is already in status: " + status);
+        }
         order.setStatus(status);
+        if(status == OrderStatus.SHIPPING){
+            List<ProductStockReceiptRequest> productStockReceiptRequests = new ArrayList<>();
+            for(OrderItem item : order.getOrderItems()) {
+                ProductStockReceiptRequest request = new ProductStockReceiptRequest();
+                request.setProductId(item.getProduct().getId());
+                request.setQuantity(item.getQuantity());
+                productStockReceiptRequests.add(request);
+            }
+            stockReceiptService.save("Xuất kho cho đơn hàng : " + order.getOrderCode() ,TypeStockReceipt.EXPORT, null, "Đã vận chuyển cho đơn hàng : " + order.getOrderCode(), productStockReceiptRequests);
+            for(ProductStockReceiptRequest request : productStockReceiptRequests) {
+                Inventory inventory = inventoryRepository.findByProduct(productService.findById(request.getProductId())).orElse(null);
+                if (inventory != null) {
+                    inventory.setProcessingQuantity(inventory.getProcessingQuantity() - request.getQuantity());
+                    inventory.recalculateAvailable();
+                    inventoryRepository.save(inventory);
+                }
+            }
+        }
         return orderRepository.save(order);
     }
 
@@ -137,6 +193,21 @@ public class OrderService {
      order.setPaymentStatus(null);
      order.setReasonCancel(reason);
      order.setCancelledAt(LocalDateTime.now());
+     List<ProductOrderRequest> productOrderRequests = new ArrayList<>();
+     for(OrderItem item : order.getOrderItems()){
+         ProductOrderRequest request = new ProductOrderRequest();
+         request.setProductId(item.getProduct().getId());
+         request.setQuantity(item.getQuantity());
+         productOrderRequests.add(request);
+     }
+        List<ProductStockReceiptRequest> productStockReceiptRequests = new ArrayList<>();
+        for(ProductOrderRequest request : productOrderRequests){
+            ProductStockReceiptRequest stockRequest = new ProductStockReceiptRequest();
+            stockRequest.setProductId(request.getProductId());
+            stockRequest.setQuantity(request.getQuantity());
+            productStockReceiptRequests.add(stockRequest);
+        }
+//        stockReceiptService.save(TypeStockReceipt.IMPORT, null, "Nhập kho trả lại cho đơn hàng đã hủy : " + order.getOrderCode(), productStockReceiptRequests);
      return orderRepository.save(order);
     }
 

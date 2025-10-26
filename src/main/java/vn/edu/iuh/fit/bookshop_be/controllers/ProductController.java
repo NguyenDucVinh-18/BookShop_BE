@@ -8,10 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductRequest;
 import vn.edu.iuh.fit.bookshop_be.models.*;
-import vn.edu.iuh.fit.bookshop_be.services.CategoryService;
-import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
-import vn.edu.iuh.fit.bookshop_be.services.ProductService;
-import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
+import vn.edu.iuh.fit.bookshop_be.services.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,14 +22,16 @@ public class ProductController {
     private final EmployeeService employeeService;
     private final CategoryService categoryService;
     private final Cloudinary cloudinary;
+    private final InventoryService inventoryService;
 
 
-    public ProductController(ProductService productService, CustomerService customerService, EmployeeService employeeService, CategoryService categoryService, Cloudinary cloudinary) {
+    public ProductController(ProductService productService, CustomerService customerService, EmployeeService employeeService, CategoryService categoryService, Cloudinary cloudinary, InventoryService inventoryService) {
         this.productService = productService;
         this.customerService = customerService;
         this.employeeService = employeeService;
         this.categoryService = categoryService;
         this.cloudinary = cloudinary;
+        this.inventoryService = inventoryService;
     }
 
     /**
@@ -72,7 +71,7 @@ public class ProductController {
             product.setPrice(request.getPrice());
             product.setDiscountPercentage(0); // Mặc định không có giảm giá
             product.setPriceAfterDiscount(request.getPrice()); // Giá sau giảm giá ban đầu bằng giá gốc
-            product.setStockQuantity(request.getStockQuantity());
+//            product.setStockQuantity(0);
             product.setPackageDimensions(request.getPackageDimensions());
             product.setWeightGrams(request.getWeightGrams());
             product.setProductType(request.getProductType());
@@ -168,11 +167,14 @@ public class ProductController {
             List<Map<String, Object>> productList = new ArrayList<>();
             for (Product product : products) {
                 Map<String, Object> productData = new HashMap<>();
+                Inventory inventory = inventoryService.findByProduct(product).getInventory();
                 productData.put("id", product.getId());
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+                productData.put("stockQuantity", inventory.getActualQuantity());
+                productData.put("processingQuantity", inventory.getProcessingQuantity());
+                productData.put("availableQuantity", inventory.getAvailableQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -283,7 +285,7 @@ public class ProductController {
             product.setProductName(request.getProductName());
             product.setDescription(request.getDescription());
             product.setPrice(request.getPrice());
-            product.setStockQuantity(request.getStockQuantity());
+//            product.setStockQuantity(request.getStockQuantity());
             product.setPackageDimensions(request.getPackageDimensions());
             product.setWeightGrams(request.getWeightGrams());
             product.setProductType(request.getProductType());
@@ -391,7 +393,7 @@ public class ProductController {
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("stockQuantity", product.getStockQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -454,7 +456,7 @@ public class ProductController {
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("stockQuantity", product.getStockQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -662,7 +664,7 @@ public class ProductController {
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("stockQuantity", product.getStockQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -772,7 +774,7 @@ public class ProductController {
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("stockQuantity", product.getStockQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -878,7 +880,7 @@ public class ProductController {
                 productData.put("productName", product.getProductName());
                 productData.put("description", product.getDescription());
                 productData.put("price", product.getPrice());
-                productData.put("stockQuantity", product.getStockQuantity());
+//                productData.put("stockQuantity", product.getStockQuantity());
                 productData.put("packageDimensions", product.getPackageDimensions());
                 productData.put("weightGrams", product.getWeightGrams());
                 productData.put("productType", product.getProductType());
@@ -911,5 +913,4 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 }

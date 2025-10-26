@@ -64,8 +64,8 @@ public class GeminiService {
 
         for (Product product : products) {
             text.append("- ").append(product.getProductName())
-                    .append(" - Giá: ").append(product.getPrice()).append(" VND")
-                    .append(" - Tồn kho: ").append(product.getStockQuantity()).append(" cuốn\n");
+                    .append(" - Giá: ").append(product.getPrice()).append(" VND");
+//                    .append(" - Tồn kho: ").append(product.getStockQuantity()).append(" cuốn\n");
         }
 
         text.append("Chúng tôi rất hân hạnh được phục vụ bạn. Nếu bạn cần thêm thông tin, hãy liên hệ với HIEUVINHbook nhé!\n")

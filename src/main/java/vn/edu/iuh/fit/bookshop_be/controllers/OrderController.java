@@ -21,13 +21,15 @@ public class OrderController{
     private final EmployeeService employeeService;
     private final AddressService addressService;
     private final VNPayService vNPayService;
+    private final ProductService productService;
 
-    public OrderController(OrderService orderService, CustomerService customerService, EmployeeService employeeService, AddressService addressService, VNPayService vNPayService) {
+    public OrderController(OrderService orderService, CustomerService customerService, EmployeeService employeeService, AddressService addressService, VNPayService vNPayService, ProductService productService) {
         this.orderService = orderService;
         this.customerService = customerService;
         this.employeeService = employeeService;
         this.addressService = addressService;
         this.vNPayService = vNPayService;
+        this.productService = productService;
     }
 
     /**
@@ -61,8 +63,9 @@ public class OrderController{
             // Kiểm tra số lượng sản phẩm
             for (var productOrderRequest : request.getProducts()) {
                 if (!orderService.checkProductQuantity(productOrderRequest)) {
+                    Product product = productService.findById(productOrderRequest.getProductId());
                     response.put("status", "error");
-                    response.put("message", "Số lượng sản phẩm không đủ: " + productOrderRequest.getProductId());
+                    response.put("message", "Số lượng sản phẩm '" + product.getProductName() + "' không đủ để đặt hàng");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
             }

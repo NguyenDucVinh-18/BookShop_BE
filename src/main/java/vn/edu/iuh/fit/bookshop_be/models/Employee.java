@@ -49,6 +49,10 @@ public class Employee {
     @Column(name = "is_active")
     private boolean isActive;
 
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<StockReceipt> stockReceipt;
+
     public Employee() {
     }
 

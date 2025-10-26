@@ -27,7 +27,7 @@ public class OrderItem {
     @Column(name = "product_name")
     private String productName;
 
-    @Column(name = "product_image")
+    @Column(name = "product_image", length = 1000)
     private String productImage;
 
     @Column(name = "is_reviewed", nullable = false)

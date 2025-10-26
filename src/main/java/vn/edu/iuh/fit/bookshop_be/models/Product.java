@@ -33,8 +33,8 @@ public class Product {
     @Column(name = "price_after_discount")
     private BigDecimal priceAfterDiscount;
 
-    @Column(name = "stock_quantity", nullable = false)
-    private Integer stockQuantity;
+//    @Column(name = "stock_quantity", nullable = false)
+//    private Integer stockQuantity;
 
     @Column(name = "package_dimensions")
     private String packageDimensions;
@@ -44,6 +44,10 @@ public class Product {
 
     @Column(name = "supplier_name")
     private String supplierName;
+
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Inventory inventory;
 
     @ElementCollection
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
@@ -112,35 +116,7 @@ public class Product {
 
     public Product() {}
 
-    public Product(Integer id, String productName, String description, BigDecimal price, Integer discountPercentage, BigDecimal priceAfterDiscount, Integer stockQuantity, String packageDimensions, Integer weightGrams, String supplierName, List<String> imageUrls, String productType, List<CartItem> cartItems, List<OrderItem> orderItems, Category category, List<ProductReview> productReviews, String publisherName, Set<String> authorNames, String publicationYear, Integer pageCount, String coverType, String gradeLevel, String ageRating, String genres, String color, String material, String manufacturingLocation) {
-        this.id = id;
-        this.productName = productName;
-        this.description = description;
-        this.price = price;
-        this.discountPercentage = discountPercentage;
-        this.priceAfterDiscount = priceAfterDiscount;
-        this.stockQuantity = stockQuantity;
-        this.packageDimensions = packageDimensions;
-        this.weightGrams = weightGrams;
-        this.supplierName = supplierName;
-        this.imageUrls = imageUrls;
-        this.productType = productType;
-        this.cartItems = cartItems;
-        this.orderItems = orderItems;
-        this.category = category;
-        this.productReviews = productReviews;
-        this.publisherName = publisherName;
-        this.authorNames = authorNames;
-        this.publicationYear = publicationYear;
-        this.pageCount = pageCount;
-        this.coverType = coverType;
-        this.gradeLevel = gradeLevel;
-        this.ageRating = ageRating;
-        this.genres = genres;
-        this.color = color;
-        this.material = material;
-        this.manufacturingLocation = manufacturingLocation;
-    }
+
 
     public Integer getId() {
         return id;
@@ -182,13 +158,13 @@ public class Product {
         this.price = price;
     }
 
-    public Integer getStockQuantity() {
-        return stockQuantity;
-    }
-
-    public void setStockQuantity(Integer stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
+//    public Integer getStockQuantity() {
+//        return stockQuantity;
+//    }
+//
+//    public void setStockQuantity(Integer stockQuantity) {
+//        this.stockQuantity = stockQuantity;
+//    }
 
     public String getPackageDimensions() {
         return packageDimensions;
@@ -357,5 +333,13 @@ public class Product {
 
     public void setSupplierName(String supplierName) {
         this.supplierName = supplierName;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
     }
 }

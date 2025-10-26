@@ -2,18 +2,23 @@ package vn.edu.iuh.fit.bookshop_be.services;
 
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
+import vn.edu.iuh.fit.bookshop_be.models.Inventory;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
+import vn.edu.iuh.fit.bookshop_be.repositories.InventoryRepository;
 import vn.edu.iuh.fit.bookshop_be.repositories.ProductRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
 
-
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, InventoryRepository inventoryRepository) {
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     public List<Product> getAllProducts() {
@@ -25,7 +30,24 @@ public class ProductService {
     }
 
     public Product save(Product product) {
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        Optional<Inventory> existingInventory = inventoryRepository.findByProduct(savedProduct);
+
+        Inventory inventory;
+        if (existingInventory.isPresent()) {
+            inventory = existingInventory.get();
+            inventory.setUpdatedAt(LocalDateTime.now());
+        } else {
+            inventory = new Inventory();
+            inventory.setProduct(savedProduct);
+            inventory.setActualQuantity(0);
+            inventory.setProcessingQuantity(0);
+            inventory.setAvailableQuantity(0);
+            inventory.setUpdatedAt(LocalDateTime.now());
+        }
+
+        inventoryRepository.save(inventory);
+        return savedProduct;
     }
 
     public Product updateProduct(Integer id, Product product) {
@@ -50,13 +72,13 @@ public class ProductService {
         return productRepository.findByProductType(productType);
     }
 
-    public Product updateProductStock(Product product, Integer quantity) {
-        if (product != null) {
-            product.setStockQuantity(product.getStockQuantity() - quantity);
-            return productRepository.save(product);
-        }
-        return null; // or throw an exception
-    }
+//    public Product updateProductStock(Product product, Integer quantity) {
+//        if (product != null) {
+//            product.setStockQuantity(product.getStockQuantity() - quantity);
+//            return productRepository.save(product);
+//        }
+//        return null; // or throw an exception
+//    }
 
 //    public List<Product> findByCategoryName(String keyword) {
 //        return productRepository.findByCategory_CategoryName(keyword);
