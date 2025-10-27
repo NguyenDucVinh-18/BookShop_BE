@@ -45,7 +45,6 @@ public class GeminiService {
         });
 
         Map response = restTemplate.postForObject(GEMINI_API_URL + API_KEY, request, Map.class);
-        System.out.println(response);
         if (response != null && response.containsKey("candidates")) {
             Map firstCandidate = (Map) ((java.util.List) response.get("candidates")).get(0);
             Map content = (Map) firstCandidate.get("content");
@@ -64,7 +63,10 @@ public class GeminiService {
 
         for (Product product : products) {
             text.append("- ").append(product.getProductName())
-                    .append(" - Giá: ").append(product.getPrice()).append(" VND");
+                    .append(" - Giá gốc: ").append(product.getPrice()).append(" VND")
+                    .append(") - Giảm giá: ").append(product.getDiscountPercentage()).append("%")
+                    .append(" - Giá bán: ").append(product.getPriceAfterDiscount()).append(" VND\n");
+
 //                    .append(" - Tồn kho: ").append(product.getStockQuantity()).append(" cuốn\n");
         }
 

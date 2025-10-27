@@ -1,6 +1,7 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -19,6 +20,9 @@ public class Conversation {
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Message> messages;
+
+    @Column(name = "last_message")
+    private String lastMessage;
 
     public Conversation() {
     }
@@ -51,5 +55,13 @@ public class Conversation {
 
     public void setMessages(List<Message> messages) {
         this.messages = messages;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
     }
 }

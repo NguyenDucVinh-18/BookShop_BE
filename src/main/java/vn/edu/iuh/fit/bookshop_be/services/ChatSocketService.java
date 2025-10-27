@@ -42,6 +42,8 @@ public class ChatSocketService {
             newConversation.setCustomer(customer);
             conversation = conversationRepository.save(newConversation);
         }
+        conversation.setLastMessage(message);
+        conversationRepository.save(conversation);
         Message newMessage = new Message();
         newMessage.setConversation(conversation);
         newMessage.setMessage(message);
