@@ -71,6 +71,11 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductReview> productReviews;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "product")
+    private List<StockReceiptDetail> stockReceiptDetails;
+
+
 
     //Sách
     @Column(name = "publisher_name")
@@ -341,5 +346,13 @@ public class Product {
 
     public void setInventory(Inventory inventory) {
         this.inventory = inventory;
+    }
+
+    public List<StockReceiptDetail> getStockReceiptDetails() {
+        return stockReceiptDetails;
+    }
+
+    public void setStockReceiptDetails(List<StockReceiptDetail> stockReceiptDetails) {
+        this.stockReceiptDetails = stockReceiptDetails;
     }
 }

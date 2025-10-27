@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductStockReceiptRequest;
@@ -102,5 +103,10 @@ public class StockReceiptService {
 
         return stockReceiptRepository.getStockReceiptsDateBetween(startDateTime, endDateTime);
     }
+
+    public StockReceipt getStockReceiptById(Integer id) {
+        return stockReceiptRepository.findById(id).orElse(null);
+    }
+
 
 }

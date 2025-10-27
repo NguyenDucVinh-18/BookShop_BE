@@ -135,4 +135,39 @@ public class StockReceiptController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getStockReceiptById(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để thực hiện hành động này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            if (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền thực hiện hành động này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            StockReceipt stockReceipt = stockReceiptService.getStockReceiptById(id);
+            if (stockReceipt == null) {
+                response.put("status", "error");
+                response.put("message", "Không tìm thấy phiếu nhập xuất kho với ID: " + id);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("stockReceipt", stockReceipt);
+            response.put("status", "success");
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy phiếu nhập xuất kho: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }

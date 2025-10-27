@@ -1,6 +1,7 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,7 +31,9 @@ public class StockReceipt {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "stockReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToMany(mappedBy = "stockReceipt", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<StockReceiptDetail> details = new ArrayList<>();
 
 

@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -13,12 +14,11 @@ public class StockReceiptDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_receipt_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private StockReceipt stockReceipt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    @JsonIgnore
     private Product product;
 
     @Column(nullable = false)
@@ -27,8 +27,6 @@ public class StockReceiptDetail {
     private String note;
 
     private String supplier;
-
-    // --- GETTER / SETTER ---
 
 
     public Integer getId() {
