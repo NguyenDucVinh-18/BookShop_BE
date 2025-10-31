@@ -75,6 +75,10 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<StockReceiptDetail> stockReceiptDetails;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "product")
+    private List<InventoryCheckReceiptDetail> inventoryCheckReceiptDetails;
+
 
 
     //Sách
@@ -354,5 +358,13 @@ public class Product {
 
     public void setStockReceiptDetails(List<StockReceiptDetail> stockReceiptDetails) {
         this.stockReceiptDetails = stockReceiptDetails;
+    }
+
+    public List<InventoryCheckReceiptDetail> getInventoryCheckReceiptDetails() {
+        return inventoryCheckReceiptDetails;
+    }
+
+    public void setInventoryCheckReceiptDetails(List<InventoryCheckReceiptDetail> inventoryCheckReceiptDetails) {
+        this.inventoryCheckReceiptDetails = inventoryCheckReceiptDetails;
     }
 }

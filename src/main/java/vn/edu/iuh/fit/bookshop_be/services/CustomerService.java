@@ -43,7 +43,6 @@ public class CustomerService {
     @Value("${base_url}")
     private String baseUrl;
 
-
     @Value("${spring.mail.username}")
     private String fromEmail;
 

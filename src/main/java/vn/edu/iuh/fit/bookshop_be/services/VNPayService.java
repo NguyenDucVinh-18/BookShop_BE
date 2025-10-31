@@ -23,8 +23,10 @@ public class VNPayService {
     @Value("${secret.key}")
     private String secretKey;
 
-    private String vnp_ReturnUrl = "http://localhost:8080/api/order/thanks";
+    @Value("${base_url}")
+    private String baseUrl;
 
+    private String vnp_ReturnUrl = baseUrl + "/api/order/thanks";
 
     private String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 

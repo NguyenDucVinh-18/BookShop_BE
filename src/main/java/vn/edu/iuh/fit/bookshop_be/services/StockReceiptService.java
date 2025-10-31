@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.ProductOrderRequest;
@@ -88,7 +89,7 @@ public class StockReceiptService {
     }
 
     public List<StockReceipt> getAllStockReceipts() {
-        return stockReceiptRepository.findAll();
+        return stockReceiptRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     public List<StockReceipt> getStockReceiptsDateBetween(LocalDate startDate, LocalDate endDate) {

@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/notification/**").permitAll()
                         .requestMatchers("/api/statistic/**").permitAll()
                         .requestMatchers("/api/stock-receipt/**").permitAll()
-
+                        .requestMatchers("/api/inventory-check-receipt/**").permitAll()
 
 
                         .anyRequest().authenticated())

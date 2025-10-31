@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,9 @@ public class OrderController{
         this.vNPayService = vNPayService;
         this.productService = productService;
     }
+
+    @Value("${base.url.FE}")
+    private String feBaseUrl;
 
     /**
      * Đặt hàng
@@ -300,18 +304,18 @@ public class OrderController{
                 order.setPaymentStatus(PaymentStatus.PAID);
                 order.setStatus(OrderStatus.PENDING);
                 orderService.save(order);
-                redirectUrl = "http://localhost:5173/order-result?status=success&orderId=" + order.getId();
+                redirectUrl = feBaseUrl + "/order-result?status=success&orderId=" + order.getId();
                 return new RedirectView(redirectUrl);
             } else {
                 order.setPaymentStatus(PaymentStatus.FAILED);
                 orderService.save(order);
-                redirectUrl = "http://localhost:5173/order-result?status=fail&orderId=" + order.getId();
+                redirectUrl = feBaseUrl + "/order-result?status=fail&orderId=" + order.getId();
                 return new RedirectView(redirectUrl);
             }
 
         }
 
-        redirectUrl = "http://localhost:5173/order-result?status=fail&orderId=" + order.getId();
+        redirectUrl = feBaseUrl + "/order-result?status=fail&orderId=" + order.getId();
         return new RedirectView(redirectUrl);
     }
 
