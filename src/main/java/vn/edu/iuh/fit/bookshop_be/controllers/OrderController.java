@@ -482,6 +482,7 @@ public class OrderController{
             order.setPaymentMethod(PaymentMethod.COD);
             order.setPaymentRef(null);
             order.setStatus(OrderStatus.PENDING);
+            order.setPaymentStatus(null);
 
 
             orderService.save(order);
