@@ -1,6 +1,7 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,13 @@ public class VNPayService {
     @Value("${base_url}")
     private String baseUrl;
 
-    private String vnp_ReturnUrl = baseUrl + "/api/order/thanks";
+    private String vnp_ReturnUrl;
+
+    @PostConstruct
+    public void init() {
+        this.vnp_ReturnUrl = baseUrl + "/api/order/thanks";
+    }
+
 
     private String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 

@@ -189,8 +189,8 @@ public class OrderService {
 
     public Order cancelOrder(Order order, String reason) {
      updateOrderStatus(order.getId(), OrderStatus.CANCELED);
-     order.setPaymentRef(null);
-     order.setPaymentStatus(null);
+//     order.setPaymentRef(null);
+//     order.setPaymentStatus(null);
      order.setReasonCancel(reason);
      order.setCancelledAt(LocalDateTime.now());
      List<ProductOrderRequest> productOrderRequests = new ArrayList<>();

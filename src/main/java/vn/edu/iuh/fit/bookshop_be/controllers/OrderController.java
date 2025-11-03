@@ -359,6 +359,7 @@ public class OrderController{
             order.setPaymentStatus(PaymentStatus.REFUNDED);
             order.setStatus(OrderStatus.CANCELED);
             order.setCancelledAt(LocalDateTime.now());
+            order.setPaymentRef(order.getPaymentRef() + "_refunded");
             orderService.save(order);
 
             response.put("status", "success");
@@ -449,6 +450,49 @@ public class OrderController{
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Lỗi khi lấy thông tin đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @PutMapping("/changeToCODPaymentMethod/{orderId}")
+    public ResponseEntity<Map<String, Object>> changeCODPaymentMethod(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer orderId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Customer customer = customerService.getCustomerByToken(authHeader);
+            if (customer == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để thay đổi phương thức thanh toán");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            Order order = orderService.findByIdAndUser(orderId, customer);
+            if (order == null) {
+                response.put("status", "error");
+                response.put("message", "Đơn hàng không tồn tại hoặc không thuộc về bạn");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            if( order.getPaymentMethod() != PaymentMethod.BANKING) {
+                response.put("status", "error");
+                response.put("message", "Chỉ có thể thay đổi phương thức thanh toán từ BANKING sang COD");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            order.setPaymentMethod(PaymentMethod.COD);
+            order.setPaymentRef(null);
+            order.setStatus(OrderStatus.PENDING);
+
+
+            orderService.save(order);
+
+            response.put("status", "success");
+            response.put("message", "Thay đổi phương thức thanh toán thành công");
+            response.put("data", order);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi thay đổi phương thức thanh toán: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
