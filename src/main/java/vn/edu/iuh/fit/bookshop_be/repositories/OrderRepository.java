@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.iuh.fit.bookshop_be.models.Order;
 import vn.edu.iuh.fit.bookshop_be.models.Customer;
+import vn.edu.iuh.fit.bookshop_be.models.ReturnOrder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,6 +46,8 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                                       @Param("startDate") LocalDateTime startDate,
                                       @Param("endDate") LocalDateTime endDate);
 
+    @Query("select o from Order o where o.returnOrder = ?1")
+    Order findByReturnOrder(ReturnOrder returnOrder);
 
 
 }

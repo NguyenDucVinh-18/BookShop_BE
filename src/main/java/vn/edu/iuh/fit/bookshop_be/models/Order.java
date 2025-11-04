@@ -42,6 +42,9 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
@@ -70,6 +73,9 @@ public class Order {
 
     @Column(name = "phone")
     private String phone;
+
+    @OneToOne
+    private ReturnOrder returnOrder;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -193,6 +199,22 @@ public class Order {
 
     public void setOrderCode(String orderCode) {
         this.orderCode = orderCode;
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+
+    public ReturnOrder getReturnOrder() {
+        return returnOrder;
+    }
+
+    public void setReturnOrder(ReturnOrder returnOrder) {
+        this.returnOrder = returnOrder;
     }
 }
 

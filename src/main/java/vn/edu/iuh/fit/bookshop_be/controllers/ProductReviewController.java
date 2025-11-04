@@ -47,7 +47,7 @@ public class ProductReviewController {
      * @return đánh giá sản phẩm mới được tạo
      */
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Object>> deletePromotion(
+    public ResponseEntity<Map<String, Object>> create(
             @RequestHeader("Authorization") String authHeader,
             @RequestPart("request") ReviewProductRequest request,
             @RequestPart(value = "medias", required = false) MultipartFile[] mediaFiles

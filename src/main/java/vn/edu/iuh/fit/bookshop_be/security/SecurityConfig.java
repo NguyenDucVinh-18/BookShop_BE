@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/statistic/**").permitAll()
                         .requestMatchers("/api/stock-receipt/**").permitAll()
                         .requestMatchers("/api/inventory-check-receipt/**").permitAll()
+                        .requestMatchers("/api/return-order/**").permitAll()
+
 
 
                         .anyRequest().authenticated())

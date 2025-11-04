@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.dtos.SignUpRequest;
 import vn.edu.iuh.fit.bookshop_be.models.Employee;
+import vn.edu.iuh.fit.bookshop_be.models.Order;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.repositories.CustomerRepository;
@@ -474,6 +475,10 @@ public class CustomerService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay(); // bao gồm cả endDate
         return customerRepository.countCustomersBetween(startDateTime, endDateTime);
+    }
+
+    public Customer findByOrder(Order order) {
+        return customerRepository.findByOrder(order);
     }
 
 }

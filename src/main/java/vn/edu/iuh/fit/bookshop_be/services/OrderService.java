@@ -184,6 +184,9 @@ public class OrderService {
                 }
             }
         }
+        if(status == OrderStatus.DELIVERED){
+            order.setDeliveredAt(LocalDateTime.now());
+        }
         return orderRepository.save(order);
     }
 
@@ -253,6 +256,10 @@ public class OrderService {
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay(); // bao gồm endDate
         Long totalSold = orderRepository.countTotalProductSoldBetween(productId, startDateTime, endDateTime);
         return totalSold != null ? totalSold : 0L;
+    }
+
+    public Order findByReturnOrder(ReturnOrder returnOrder) {
+        return orderRepository.findByReturnOrder(returnOrder);
     }
 
 }

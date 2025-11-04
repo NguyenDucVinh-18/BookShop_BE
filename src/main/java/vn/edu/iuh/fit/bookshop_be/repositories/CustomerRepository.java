@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import vn.edu.iuh.fit.bookshop_be.models.Order;
 import vn.edu.iuh.fit.bookshop_be.models.Role;
 import vn.edu.iuh.fit.bookshop_be.models.Customer;
 
@@ -24,6 +25,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.createdAt BETWEEN :startDate AND :endDate")
     Long countCustomersBetween(@Param("startDate") LocalDateTime startDate,
                                @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT c FROM Customer c JOIN c.orders o WHERE o = :order")
+    Customer findByOrder(@Param("order") Order order);
 
 
 }
