@@ -116,16 +116,6 @@ public class ReturnOrderService {
                     productStockReceiptRequests
             );
 
-//            for(ProductStockReceiptRequest request : productStockReceiptRequests) {
-//                Inventory inventory = inventoryRepository.findByProduct(productService.findById(request.getProductId())).orElse(null);
-//                if (inventory != null) {
-//                    inventory.setAvailableQuantity(inventory.getAvailableQuantity() + request.getQuantity());
-//                    inventory.setActualQuantity(inventory.getActualQuantity() + request.getQuantity());
-//                    inventory.recalculateAvailable();
-//                    inventoryRepository.save(inventory);
-//                }
-//            }
-
             message = "Shop đã nhận và kiểm tra hàng hoàn trả của bạn cho đơn " + order.getOrderCode() +
                     ". Tiền sẽ được hoàn lại trong thời gian sớm nhất. Cảm ơn bạn đã mua sắm tại cửa hàng!";
 
@@ -137,10 +127,6 @@ public class ReturnOrderService {
                     " đã bị từ chối. Vui lòng liên hệ bộ phận hỗ trợ để biết thêm chi tiết.";
         }
 
-        // ✅ Gửi tin nhắn tự động cho khách hàng
-        System.out.println("Sending message to customer: " + message);
-        System.out.println("Customer: " + customer.getId());
-        System.out.println("Employee: " + employee.getId());
         if (!message.isEmpty() && customer != null) {
             Message savedMsg = chatSocketService.sendMessage(Role.STAFF, employee.getId(), customer.getId(), message);
             messagingTemplate.convertAndSend("/topic/messages/" + customer.getId(), savedMsg);

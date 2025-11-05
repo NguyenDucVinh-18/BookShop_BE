@@ -71,9 +71,9 @@ public class ReturnOrderController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            if(order.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusDays(3))) {
+            if (order.getDeliveredAt().isBefore(java.time.LocalDateTime.now().minusDays(3))) {
                 response.put("status", "error");
-                response.put("message", "Chỉ có thể tạo yêu cầu trả hàng cho các đơn hàng đã mua ít nhất 7 ngày trước");
+                response.put("message", "Chỉ có thể hoàn trả trong vòng 3 ngày kể từ khi đơn hàng được giao");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
