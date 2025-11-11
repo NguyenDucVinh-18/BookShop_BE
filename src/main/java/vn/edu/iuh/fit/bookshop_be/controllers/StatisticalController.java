@@ -61,18 +61,26 @@ public class StatisticalController {
             }
 
             // Nếu không truyền ngày thì mặc định lấy toàn bộ
-            if (startDate == null) startDate = LocalDate.of(2000, 1, 1);
-            if (endDate == null) endDate = LocalDate.now();
+//            if (startDate == null) startDate = LocalDate.of(2000, 1, 1);
+//            if (endDate == null) endDate = LocalDate.now();
 
-            Long totalOrders = orderService.countOrdersBetween(startDate, endDate);
-            Double totalRevenue = orderService.calculateTotalRevenueBetween(startDate, endDate);
-            Long totalProducts = productService.countProducts(); // thường không phụ thuộc thời gian
+            Long totalOrdersDelivered = orderService.countOrdersDeliveredBetween(startDate, endDate);
+            Double totalRevenueCompleted = orderService.calculateTotalRevenueCompletedBetween(startDate, endDate);
+            Long totalOrdersUncompleted = orderService.countUncompletedOrdersBetween(startDate, endDate);
+            Long totalRefundOrCanceledOrders = orderService.countRefundOrCanceledOrdersBetween(startDate, endDate);
+            Double totalRevenueUncompleted = orderService.calculateTotalRevenueUncompletedBetween(startDate, endDate);
+            if(totalRevenueCompleted == null) totalRevenueCompleted = 0.0;
+            if(totalRevenueUncompleted == null) totalRevenueUncompleted = 0.0;
+            Long totalProducts = productService.countProducts();
             Long totalEmployees = employeeService.countEmployees();
             Long totalCustomers = customerService.countCustomersBetween(startDate, endDate);
 
             Map<String, Object> data = new HashMap<>();
-            data.put("totalOrders", totalOrders);
-            data.put("totalRevenue", totalRevenue);
+            data.put("totalOrdersDelivered", totalOrdersDelivered);
+            data.put("totalRevenueCompleted", totalRevenueCompleted);
+            data.put("totalOrdersUncompleted", totalOrdersUncompleted);
+            data.put("totalRefundOrCanceledOrders", totalRefundOrCanceledOrders);
+            data.put("totalRevenueUncompleted", totalRevenueUncompleted);
             data.put("totalProducts", totalProducts);
             data.put("totalEmployees", totalEmployees);
             data.put("totalCustomers", totalCustomers);

@@ -10,13 +10,14 @@ import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.services.*;
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/order")
-public class OrderController{
+public class OrderController {
     private final OrderService orderService;
     private final CustomerService customerService;
     private final EmployeeService employeeService;
@@ -38,6 +39,7 @@ public class OrderController{
 
     /**
      * Đặt hàng
+     *
      * @param authHeader
      * @param request
      * @return trả về thông tin đơn hàng đã đặt
@@ -46,12 +48,12 @@ public class OrderController{
     public ResponseEntity<Map<String, Object>> updateAvatar(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody PlaceOrderRequest request
-            ) {
+    ) {
         Map<String, Object> response = new HashMap<>();
         try {
             Customer customer = customerService.getCustomerByToken(authHeader);
 
-            if (customer == null ) {
+            if (customer == null) {
                 response.put("status", "error");
                 response.put("message", "Bạn cần đăng nhập để cập nhật ảnh đại diện");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -74,13 +76,13 @@ public class OrderController{
                 }
             }
 
-            if(request.getAddress() == null || request.getAddress().isEmpty()){
+            if (request.getAddress() == null || request.getAddress().isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Địa chỉ giao hàng không được để trống");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            if(request.getPhone() == null || request.getPhone().isEmpty() || !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")){
+            if (request.getPhone() == null || request.getPhone().isEmpty() || !request.getPhone().matches("^(\\+84|0)\\d{9,10}$")) {
                 response.put("status", "error");
                 response.put("message", "Số điện thoại không hợp lệ");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -88,8 +90,8 @@ public class OrderController{
 
             // Thực hiện đặt hàng
             Map<String, Object> data = new HashMap<>();
-            Order order = orderService.placeOrder(customer, paymentMethod, request.getAddress(), request.getPhone() , request.getNote(), request.getProducts(), request.getPromotionCode());
-            if(order.getPaymentMethod() == PaymentMethod.BANKING){
+            Order order = orderService.placeOrder(customer, paymentMethod, request.getAddress(), request.getPhone(), request.getNote(), request.getProducts(), request.getPromotionCode());
+            if (order.getPaymentMethod() == PaymentMethod.BANKING) {
                 String vnpUrl = this.vNPayService.generateVNPayURL(order.getTotalAmount().doubleValue(), order.getPaymentRef());
                 data.put("vnpUrl", vnpUrl);
             }
@@ -120,6 +122,7 @@ public class OrderController{
 
     /**
      * Lấy danh sách đơn hàng của người dùng
+     *
      * @param authHeader
      * @return trả về danh sách đơn hàng của người dùng
      */
@@ -148,6 +151,7 @@ public class OrderController{
 
     /**
      * Cập nhật trạng thái đơn hàng
+     *
      * @param authHeader
      * @param orderId
      * @param status
@@ -157,8 +161,7 @@ public class OrderController{
     public ResponseEntity<Map<String, Object>> updateOrderStatus(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Integer orderId,
-            @RequestParam String status)
-    {
+            @RequestParam String status) {
         Map<String, Object> response = new HashMap<>();
         try {
             Employee employee = employeeService.getEmployeeByToken(authHeader);
@@ -168,7 +171,7 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-            if (employee.getRole() == null || ( employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
                 response.put("status", "error");
                 response.put("message", "Bạn không có quyền cập nhật trạng thái đơn hàng");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -195,6 +198,7 @@ public class OrderController{
 
     /**
      * Hủy đơn hàng
+     *
      * @param authHeader
      * @param orderId
      * @param reason
@@ -253,6 +257,7 @@ public class OrderController{
 
     /**
      * Xử lý thanh toán qua VNPAY
+     *
      * @param totalPrice
      * @return trả về URL thanh toán của VNPAY
      * @throws UnsupportedEncodingException
@@ -282,9 +287,9 @@ public class OrderController{
     }
 
 
-
     /**
      * Trang cảm ơn sau khi thanh toán
+     *
      * @param vnpayResponseCode
      * @param paymentRef
      * @return chuyển hướng đến trang kết quả đơn hàng
@@ -300,7 +305,7 @@ public class OrderController{
         }
         if (vnpayResponseCode.isPresent() && paymentRef.isPresent()) {
             // thanh toán qua VNPAY, cập nhật trạng thái order
-            if(vnpayResponseCode.get().equals("00")) {
+            if (vnpayResponseCode.get().equals("00")) {
                 order.setPaymentStatus(PaymentStatus.PAID);
                 order.setStatus(OrderStatus.PENDING);
                 orderService.save(order);
@@ -321,6 +326,7 @@ public class OrderController{
 
     /**
      * Hoàn tiền đơn hàng
+     *
      * @param paymentRef
      * @param transactionType
      * @return trả về kết quả hoàn tiền
@@ -376,6 +382,7 @@ public class OrderController{
 
     /**
      * Lấy tất cả đơn hàng (dành cho nhân viên và quản lý)
+     *
      * @param authHeader
      * @return trả về danh sách tất cả đơn hàng
      */
@@ -395,6 +402,36 @@ public class OrderController{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
             List<Order> orders = orderService.findAll();
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách đơn hàng thành công");
+            response.put("data", orders);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách đơn hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/getOrderBetween")
+    public ResponseEntity<Map<String, Object>> getOrdersBetween(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Employee employee = employeeService.getEmployeeByToken(authHeader);
+            if (employee == null) {
+                response.put("status", "error");
+                response.put("message", "Bạn cần đăng nhập để xem đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            if (employee.getRole() == null || (employee.getRole() != Role.STAFF && employee.getRole() != Role.MANAGER)) {
+                response.put("status", "error");
+                response.put("message", "Bạn không có quyền xem tất cả đơn hàng");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            List<Order> orders = orderService.getOrdersByDateRange(startDate, endDate);
             response.put("status", "success");
             response.put("message", "Lấy danh sách đơn hàng thành công");
             response.put("data", orders);

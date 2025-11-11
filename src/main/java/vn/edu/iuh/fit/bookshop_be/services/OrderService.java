@@ -12,6 +12,7 @@ import vn.edu.iuh.fit.bookshop_be.repositories.OrderRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -222,6 +223,16 @@ public class OrderService {
         return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
+    public List<Order> getOrdersByDateRange(LocalDate start, LocalDate end) {
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
+        return orderRepository.findAllByDateRange(startDateTime, endDateTime)
+                .stream()
+                .sorted((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()))
+                .toList();
+    }
+
+
     public Order findByIdAndUser(Integer id, Customer customer) {
         return orderRepository.findByIdAndCustomer(id, customer);
     }
@@ -237,13 +248,67 @@ public class OrderService {
         return totalRevenue;
     }
 
-    public Double calculateTotalRevenueBetween(LocalDate startDate, LocalDate endDate) {
-        return orderRepository.calculateTotalRevenueBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+    public Double calculateTotalRevenueCompletedBetween(LocalDate startDate, LocalDate endDate) {
+        return orderRepository.calculateTotalRevenueCompletedBetween(
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay(),
+                OrderStatus.DELIVERED
+        );
     }
 
-    public Long countOrdersBetween(LocalDate startDate, LocalDate endDate) {
-        return orderRepository.countByOrderDateBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+    public Long countOrdersDeliveredBetween(LocalDate startDate, LocalDate endDate) {
+        return orderRepository.countCompletedOrdersBetween(
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay(),
+                OrderStatus.DELIVERED
+        );
     }
+    public Long countUncompletedOrdersBetween(LocalDate startDate, LocalDate endDate) {
+        List<OrderStatus> uncompletedStatuses = List.of(
+                OrderStatus.UNPAID,
+                OrderStatus.PROCESSING,
+                OrderStatus.PENDING,
+                OrderStatus.SHIPPING
+        );
+
+        return orderRepository.countUncompletedOrdersBetween(
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay(),
+                uncompletedStatuses
+        );
+    }
+
+    public Long countRefundOrCanceledOrdersBetween(LocalDate startDate, LocalDate endDate) {
+        List<OrderStatus> refundOrCanceledStatuses = List.of(
+                OrderStatus.CANCELED,
+                OrderStatus.REFUNDED,
+                OrderStatus.REFUND_REQUESTED,
+                OrderStatus.REFUNDING,
+                OrderStatus.REFUND_REJECTED
+        );
+
+        return orderRepository.countRefundOrCanceledOrdersBetween(
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay(),
+                refundOrCanceledStatuses
+        );
+    }
+
+    public Double calculateTotalRevenueUncompletedBetween(LocalDate startDate, LocalDate endDate) {
+        List<OrderStatus> uncompletedStatuses = List.of(
+                OrderStatus.UNPAID,
+                OrderStatus.PROCESSING,
+                OrderStatus.PENDING,
+                OrderStatus.SHIPPING
+        );
+
+        return orderRepository.calculateTotalRevenueUncompletedBetween(
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay(),
+                uncompletedStatuses
+        );
+    }
+
 
     //countTotalProductsSold
     public Long countTotalProductSold(Integer productId) {
