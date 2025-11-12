@@ -1,7 +1,9 @@
 package vn.edu.iuh.fit.bookshop_be.repositories;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
 import vn.edu.iuh.fit.bookshop_be.models.Product;
@@ -28,6 +30,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("select p from Product p where p.productName like ?1")
     List<Product> findByProductNameLike(String productName);
+
+    @Query("SELECT p FROM Product p ORDER BY p.discountPercentage DESC")
+    List<Product> findTopDiscountedProducts(Pageable pageable);
 
 
 }

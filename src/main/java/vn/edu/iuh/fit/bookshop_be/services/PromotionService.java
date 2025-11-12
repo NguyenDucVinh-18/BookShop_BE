@@ -2,11 +2,14 @@ package vn.edu.iuh.fit.bookshop_be.services;
 
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Promotion;
+import vn.edu.iuh.fit.bookshop_be.models.PromotionStatus;
 import vn.edu.iuh.fit.bookshop_be.repositories.PromotionRepository;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PromotionService {
@@ -63,6 +66,25 @@ public class PromotionService {
     public Promotion findByCode(String code) {
         return promotionRepository.findByCode(code);
     }
+
+    public List<Promotion> getActivePromotionsForCustomers() {
+            List<Promotion> promotions = getAllPromotions();
+
+            return promotions.stream()
+                    .filter(p -> p.getStatus() == PromotionStatus.ACTIVE || p.getStatus() == PromotionStatus.INACTIVE)
+                    .sorted(Comparator.comparing(Promotion::getStartDate))
+                    .collect(Collectors.toList());
+    }
+
+    public List<Promotion> getPromotionsByStatus(PromotionStatus status) {
+        List<Promotion> promotions = getAllPromotions();
+
+        return promotions.stream()
+                .filter(p -> p.getStatus() == status)
+                .sorted(Comparator.comparing(Promotion::getStartDate))
+                .collect(Collectors.toList());
+    }
+
 
 
 

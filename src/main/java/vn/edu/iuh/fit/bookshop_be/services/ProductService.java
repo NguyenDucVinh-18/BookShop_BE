@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Category;
 import vn.edu.iuh.fit.bookshop_be.models.Inventory;
@@ -98,6 +99,10 @@ public class ProductService {
 
     public List<Product> findByProductNameLike(String productName) {
         return productRepository.findByProductNameLike("%" + productName + "%");
+    }
+
+    public List<Product> findTopDiscountedProducts(int limit) {
+        return productRepository.findTopDiscountedProducts(PageRequest.of(0, limit));
     }
 
 

@@ -6,10 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.fit.bookshop_be.dtos.PromotionRequest;
-import vn.edu.iuh.fit.bookshop_be.models.Customer;
-import vn.edu.iuh.fit.bookshop_be.models.Employee;
-import vn.edu.iuh.fit.bookshop_be.models.Promotion;
-import vn.edu.iuh.fit.bookshop_be.models.Role;
+import vn.edu.iuh.fit.bookshop_be.models.*;
 import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
 import vn.edu.iuh.fit.bookshop_be.services.PromotionService;
 import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
@@ -398,4 +395,41 @@ public class PromotionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @GetMapping("/getPromotionsForCustomers")
+    public ResponseEntity<Map<String, Object>> getPromotionsForCustomers() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Promotion> promotions = promotionService.getActivePromotionsForCustomers();
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách khuyến mãi cho khách hàng thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("promotions", promotions);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách khuyến mãi cho khách hàng: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/getPromotionsActive")
+    public ResponseEntity<Map<String, Object>> getPromotionsActive() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Promotion> promotions = promotionService.getPromotionsByStatus(PromotionStatus.ACTIVE);
+            response.put("status", "success");
+            response.put("message", "Lấy danh sách khuyến mãi đang hoạt động thành công");
+            Map<String, Object> data = new HashMap<>();
+            data.put("promotions", promotions);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi khi lấy danh sách khuyến mãi đang hoạt động: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 }
