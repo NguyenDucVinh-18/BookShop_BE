@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.controllers;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -12,6 +13,7 @@ import vn.edu.iuh.fit.bookshop_be.models.Customer;
 import vn.edu.iuh.fit.bookshop_be.security.JwtUtil;
 import vn.edu.iuh.fit.bookshop_be.services.CustomerService;
 import vn.edu.iuh.fit.bookshop_be.services.EmployeeService;
+import vn.edu.iuh.fit.bookshop_be.services.GoogleOAuth2Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,11 +24,17 @@ public class AuthController {
     private final CustomerService customerService;
     private final EmployeeService employeeService;
     private final JwtUtil jwtUtil;
+    private final GoogleOAuth2Service googleOAuth2Service;
 
-    public AuthController(CustomerService customerService, EmployeeService employeeService, JwtUtil jwtUtil) {
+
+    @Value("${base.url.FE}")
+    private String baseUrlFe;
+
+    public AuthController(CustomerService customerService, EmployeeService employeeService, JwtUtil jwtUtil, GoogleOAuth2Service googleOAuth2Service) {
         this.customerService = customerService;
         this.employeeService = employeeService;
         this.jwtUtil = jwtUtil;
+        this.googleOAuth2Service = googleOAuth2Service;
     }
 
     /**
@@ -258,14 +266,14 @@ public class AuthController {
                 String token = jwtUtil.generateAccessToken(existingCustomer.getEmail(), Role.CUSTOMER.toString());
 
                 // Redirect về FE kèm token trên URL
-                redirectUrl = "http://localhost:5173/verify-success?token=" + token;
+                redirectUrl = baseUrlFe + "/verify-success?token=" + token;
             } else {
-                redirectUrl = "http://localhost:5173/verify-failed";
+                redirectUrl = baseUrlFe + "/verify-failed";
             }
 
             return new RedirectView(redirectUrl);
         } catch (Exception e) {
-            return new RedirectView("http://localhost:5173/verify-failed");
+            return new RedirectView(baseUrlFe + "/verify-failed");
         }
     }
 
@@ -396,6 +404,40 @@ public class AuthController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @PostMapping("/login-oauth2")
+    public ResponseEntity<Map<String, Object>> loginOAuth2(@RequestParam String token) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Customer customer = googleOAuth2Service.loginWithGoogle(token);
+
+            // Tạo JWT của hệ thống bạn
+            String accessToken = jwtUtil.generateAccessToken(customer.getEmail(), customer.getRole().toString());
+            String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail());
+
+            response.put("status", "success");
+
+            Map<String, Object> data = new HashMap<>();
+
+            Map<String, String> tokens = new HashMap<>();
+            tokens.put("accessToken", accessToken);
+            tokens.put("refreshToken", refreshToken);
+
+            data.put("tokens", tokens);
+            data.put("customer", customer);
+
+            response.put("data", data);
+            response.put("message", "Đăng nhập Google thành công");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(400).body(error);
+        }
+    }
+
 
     /**
      * Lấy thông tin người dùng từ token

@@ -155,4 +155,5 @@ public class Customer {
     public void setConversation(Conversation conversation) {
         this.conversation = conversation;
     }
+
 }
