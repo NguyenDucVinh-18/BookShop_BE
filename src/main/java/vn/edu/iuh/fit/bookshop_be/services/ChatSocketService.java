@@ -42,6 +42,7 @@ public class ChatSocketService {
             Customer customer = customerService.findById(idRender);
             newConversation.setCustomer(customer);
             newConversation.setUnreadCount(0);
+            newConversation.setUnreadCountEmployee(0);
             conversation = conversationRepository.save(newConversation);
         }
         conversation.setLastMessage(message);
@@ -54,10 +55,13 @@ public class ChatSocketService {
         newMessage.setCreatedAt(LocalDateTime.now());
         if (roleRender == Role.CUSTOMER) {
             newMessage.setSentByCustomer(true);
+            conversation.setUnreadCountEmployee(conversation.getUnreadCountEmployee() + 1);
+            conversationRepository.save(conversation);
         } else {
             newMessage.setSentByCustomer(false);
             newMessage.setEmployee(employeeService.findById(idRender));
             conversation.setUnreadCount(conversation.getUnreadCount() + 1);
+            conversation.setUnreadCountEmployee(0);
             conversationRepository.save(conversation);
         }
         return messageRepository.save(newMessage);

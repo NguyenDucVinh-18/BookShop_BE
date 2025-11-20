@@ -28,6 +28,9 @@ public class Conversation {
     @Column(name = "unread_count")
     private Integer unreadCount;
 
+    @Column(name = "unread_count_employee")
+    private Integer unreadCountEmployee;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -86,5 +89,13 @@ public class Conversation {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Integer getUnreadCountEmployee() {
+        return unreadCountEmployee;
+    }
+
+    public void setUnreadCountEmployee(Integer unreadCountEmployee) {
+        this.unreadCountEmployee = unreadCountEmployee;
     }
 }
