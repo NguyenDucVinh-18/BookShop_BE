@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.services;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.fit.bookshop_be.models.Conversation;
 import vn.edu.iuh.fit.bookshop_be.models.Customer;
@@ -40,9 +41,11 @@ public class ChatSocketService {
             Conversation newConversation = new Conversation();
             Customer customer = customerService.findById(idRender);
             newConversation.setCustomer(customer);
+            newConversation.setUnreadCount(0);
             conversation = conversationRepository.save(newConversation);
         }
         conversation.setLastMessage(message);
+        conversation.setUpdatedAt(LocalDateTime.now());
         conversationRepository.save(conversation);
         Message newMessage = new Message();
         newMessage.setConversation(conversation);
@@ -54,6 +57,8 @@ public class ChatSocketService {
         } else {
             newMessage.setSentByCustomer(false);
             newMessage.setEmployee(employeeService.findById(idRender));
+            conversation.setUnreadCount(conversation.getUnreadCount() + 1);
+            conversationRepository.save(conversation);
         }
         return messageRepository.save(newMessage);
     }
@@ -77,7 +82,24 @@ public class ChatSocketService {
     }
 
     public List<Conversation> getConversations() {
-        return conversationRepository.findAll();
+        return conversationRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"));
+    }
+
+    public int getUnreadCount(Integer customerId) {
+        Conversation conversation = findConversationByCustomerId(customerId);
+        if (conversation == null) {
+            return 0;
+        }
+        return conversation.getUnreadCount();
+    }
+
+    public void markMessagesAsRead(Integer customerId) {
+        Conversation conversation = findConversationByCustomerId(customerId);
+        if (conversation == null) {
+            return;
+        }
+        conversation.setUnreadCount(0);
+        conversationRepository.save(conversation);
     }
 
 
