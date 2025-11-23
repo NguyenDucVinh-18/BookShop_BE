@@ -6,6 +6,10 @@ COPY build.gradle gradlew gradlew.bat /app/
 COPY gradle /app/gradle
 COPY src /app/src
 
+# Cho phép gradlew có quyền thực thi
+RUN chmod +x gradlew
+
+# Build project
 RUN ./gradlew build --no-daemon -x test
 RUN ls -l build/libs
 RUN cp $(ls build/libs/*SNAPSHOT.jar | grep -v plain) app.jar
