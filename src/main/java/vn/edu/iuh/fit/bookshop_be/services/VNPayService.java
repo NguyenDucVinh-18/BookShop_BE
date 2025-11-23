@@ -18,14 +18,14 @@ import java.util.*;
 
 @Service
 public class VNPayService {
-    @Value("${vnp.tmnCode}")
-    private String vnp_TmnCode;
+//    @Value("${vnp.tmnCode}")
+    private String vnp_TmnCode = "ZJOR2ELD";
 
-    @Value("${secret.key}")
-    private String secretKey;
+//    @Value("${secret.key}")
+    private String secretKey = "L884QK0ZU6JGDMXLGR23WU4NYY84DAVQ";
 
-    @Value("${base_url}")
-    private String baseUrl;
+//    @Value("${base_url}")
+    private String baseUrl = "https://vps.hieuvinhbook-shop.id.vn";
 
     private String vnp_ReturnUrl;
 
