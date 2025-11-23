@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.bookshop_be.configs;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -9,6 +10,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -21,7 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/chat-websocket")
 //                .setAllowedOrigins("http://localhost:5173")
 //                .withSockJS();
-                .setAllowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*") // Sử dụng mẫu để linh hoạt hơn
+                .setAllowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*", "https://hieuvinh-book.vercel.app:*") // Sử dụng mẫu để linh hoạt hơn
                 .withSockJS();
     }
 }

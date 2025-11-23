@@ -34,8 +34,8 @@ public class OrderController {
         this.productService = productService;
     }
 
-    @Value("${base.url.FE}")
-    private String feBaseUrl;
+//    @Value("${base.url.FE}")
+    private String feBaseUrl = "https://hieuvinh-book.vercel.app";
 
     /**
      * Đặt hàng
@@ -309,18 +309,18 @@ public class OrderController {
                 order.setPaymentStatus(PaymentStatus.PAID);
                 order.setStatus(OrderStatus.PENDING);
                 orderService.save(order);
-                redirectUrl = feBaseUrl + "/order-result?status=success&orderId=" + order.getId();
+                redirectUrl = "https://hieuvinh-book.vercel.app/order-result?status=success&orderId=" + order.getId();
                 return new RedirectView(redirectUrl);
             } else {
                 order.setPaymentStatus(PaymentStatus.FAILED);
                 orderService.save(order);
-                redirectUrl = feBaseUrl + "/order-result?status=fail&orderId=" + order.getId();
+                redirectUrl = "https://hieuvinh-book.vercel.app/order-result?status=fail&orderId=" + order.getId();
                 return new RedirectView(redirectUrl);
             }
 
         }
 
-        redirectUrl = feBaseUrl + "/order-result?status=fail&orderId=" + order.getId();
+        redirectUrl = "https://hieuvinh-book.vercel.app/order-result?status=fail&orderId=" + order.getId();
         return new RedirectView(redirectUrl);
     }
 

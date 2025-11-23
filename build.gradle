@@ -63,6 +63,12 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http
     implementation("com.google.auth:google-auth-library-oauth2-http:1.40.0")
 
+    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
+    implementation("mysql:mysql-connector-java:8.0.33")
+
+    // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    implementation("com.mysql:mysql-connector-j:9.4.0")
+
 
 }
 
