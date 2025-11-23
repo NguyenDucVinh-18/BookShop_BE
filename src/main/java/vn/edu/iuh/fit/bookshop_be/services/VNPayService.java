@@ -70,8 +70,15 @@ public class VNPayService {
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
 //        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        TimeZone timeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+
+        // Khởi tạo Calendar với TimeZone đã định
+        Calendar cld = Calendar.getInstance(timeZone);
+
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        // Đảm bảo formatter sử dụng TimeZone đã định
+        formatter.setTimeZone(timeZone);
+
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
